@@ -23,18 +23,22 @@ int main(int argc, char *argv[])
         QImage gradientInput;
 
         BertalmioProcessing::GradientLaplace gradientLaplace;
+        BertalmioProcessing::IsophoteDirection isophoteDirection;
 
         laplace = bertalmioParts.laplace(input);
-        gradientLaplace = bertalmioParts.gradientLaplace(laplace);
-
-        // GradientLaplace starts on 1,1 !!
-
-        qDebug() << gradientLaplace.r[1][1].x << gradientLaplace.r[1][1].y;
+        gradientLaplace = bertalmioParts.gradientLaplace(laplace);        
+        isophoteDirection = bertalmioParts.isophoteDirection(input);
 
         anisotropic = bertalmioParts.anisotropicDiffusion(input);
         gradientInput = bertalmioParts.gradientInput(input);
 
         laplace.save("laplace.png");
+
+        // GradientLaplace starts on 1,1 !!
+        //qDebug() << gradientLaplace.r[9][10].x << gradientLaplace.r[9][10].y;
+        qDebug() << isophoteDirection.r[4][4].x << isophoteDirection.r[4][4].y;
+        qDebug() << isophoteDirection.g[4][4].x << isophoteDirection.g[4][4].y;
+        qDebug() << isophoteDirection.b[4][4].x << isophoteDirection.b[4][4].y;
     }
 
     return a.exec();
