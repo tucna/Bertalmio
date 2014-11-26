@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QImage>
+#include <QDebug>
 
 #include "bertalmioprocessing.h"
 
@@ -9,14 +10,32 @@ int main(int argc, char *argv[])
 
     BertalmioProcessing bertalmioParts;
 
-    QImage input;
-    QImage anisotropic;
-    QImage laplace;
-    QImage gradient;
+    QImage input(QCoreApplication::applicationDirPath() + "/lena.png");
 
-    anisotropic = bertalmioParts.anisotropicDiffusion(input);
-    laplace = bertalmioParts.laplace(input);
-    gradient = bertalmioParts.gradient(input);
+    if (input.isNull())
+    {
+        qDebug() << "Image not found!";
+    }
+    else
+    {
+        QImage anisotropic;
+        QImage laplace;
+        QImage gradientInput;
+
+        BertalmioProcessing::GradientLaplace gradientLaplace;
+
+        laplace = bertalmioParts.laplace(input);
+        gradientLaplace = bertalmioParts.gradientLaplace(laplace);
+
+        // GradientLaplace starts on 1,1 !!
+
+        qDebug() << gradientLaplace.r[1][1].x << gradientLaplace.r[1][1].y;
+
+        anisotropic = bertalmioParts.anisotropicDiffusion(input);
+        gradientInput = bertalmioParts.gradientInput(input);
+
+        laplace.save("laplace.png");
+    }
 
     return a.exec();
 }
