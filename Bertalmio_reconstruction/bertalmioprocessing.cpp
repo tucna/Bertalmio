@@ -1,5 +1,6 @@
 #include <QImage>
 #include <QDebug>
+
 #include <qmath.h>
 
 #include "bertalmioprocessing.h"
@@ -10,7 +11,82 @@ BertalmioProcessing::BertalmioProcessing()
 
 QImage BertalmioProcessing::anisotropicDiffusion(QImage &image)
 {
+    const float KAPPA = 30.0;
+
     QImage result(image);
+    List2DFloat imageFloat;
+    QList<float> rowTemp;
+
+    for (int i = 0; i < image.width(); i++)
+    {
+        rowTemp.append(0);
+    }
+
+    imageFloat.r.append(rowTemp);
+    imageFloat.g.append(rowTemp);
+    imageFloat.b.append(rowTemp);
+
+    for (int o = 1; o < image.height() - 1; o++)
+    {
+        QList<float> rowR;
+        QList<float> rowG;
+        QList<float> rowB;
+
+        rowR.append(0);
+        rowG.append(0);
+        rowB.append(0);
+
+        for (int i = 1; i < image.width() - 1; i++)
+        {
+            // nabla
+            int nablaN_R = qRed(image.pixel(i-1, o)) - qRed(image.pixel(i, o));
+            int nablaS_R = qRed(image.pixel(i+1, o)) - qRed(image.pixel(i, o));
+            int nablaE_R = qRed(image.pixel(i, o+1)) - qRed(image.pixel(i, o));
+            int nablaW_R = qRed(image.pixel(i, o-1)) - qRed(image.pixel(i, o));
+
+            int nablaN_G = qGreen(image.pixel(i-1, o)) - qGreen(image.pixel(i, o));
+            int nablaS_G = qGreen(image.pixel(i+1, o)) - qGreen(image.pixel(i, o));
+            int nablaE_G = qGreen(image.pixel(i, o+1)) - qGreen(image.pixel(i, o));
+            int nablaW_G = qGreen(image.pixel(i, o-1)) - qGreen(image.pixel(i, o));
+
+            int nablaN_B = qBlue(image.pixel(i-1, o)) - qBlue(image.pixel(i, o));
+            int nablaS_B = qBlue(image.pixel(i+1, o)) - qBlue(image.pixel(i, o));
+            int nablaE_B = qBlue(image.pixel(i, o+1)) - qBlue(image.pixel(i, o));
+            int nablaW_B = qBlue(image.pixel(i, o-1)) - qBlue(image.pixel(i, o));
+
+            // c - gauss
+            float cN_R = qExp(-qPow(nablaN_R/KAPPA,2));
+            float cS_R = qExp(-qPow(nablaS_R/KAPPA,2));
+            float cE_R = qExp(-qPow(nablaE_R/KAPPA,2));
+            float cW_R = qExp(-qPow(nablaW_R/KAPPA,2));
+
+            float cN_G = qExp(-qPow(nablaN_G/KAPPA,2));
+            float cS_G = qExp(-qPow(nablaS_G/KAPPA,2));
+            float cE_G = qExp(-qPow(nablaE_G/KAPPA,2));
+            float cW_G = qExp(-qPow(nablaW_G/KAPPA,2));
+
+            float cN_B = qExp(-qPow(nablaN_B/KAPPA,2));
+            float cS_B = qExp(-qPow(nablaS_B/KAPPA,2));
+            float cE_B = qExp(-qPow(nablaE_B/KAPPA,2));
+            float cW_B = qExp(-qPow(nablaW_B/KAPPA,2));
+
+            //rowR.append(valueR);
+            //rowG.append(valueG);
+            //rowB.append(valueB);
+        }
+
+        rowR.append(0);
+        rowG.append(0);
+        rowB.append(0);
+
+        imageFloat.r.append(rowR);
+        imageFloat.g.append(rowG);
+        imageFloat.b.append(rowB);
+    }
+
+    imageFloat.r.append(rowTemp);
+    imageFloat.g.append(rowTemp);
+    imageFloat.b.append(rowTemp);
 
     return result;
 }
