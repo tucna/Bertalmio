@@ -11,7 +11,9 @@ BertalmioProcessing::BertalmioProcessing()
 
 QImage BertalmioProcessing::anisotropicDiffusion(QImage &image)
 {
-    const float KAPPA = 30.0;
+    const float KAPPA = 30.0f;
+    const float DELTA_T = 1.0f/7.0f;
+    const int NUM_ITER = 15;
 
     QImage result(image);
     List2DFloat imageFloat;
@@ -69,6 +71,13 @@ QImage BertalmioProcessing::anisotropicDiffusion(QImage &image)
             float cS_B = qExp(-qPow(nablaS_B/KAPPA,2));
             float cE_B = qExp(-qPow(nablaE_B/KAPPA,2));
             float cW_B = qExp(-qPow(nablaW_B/KAPPA,2));
+
+            // application
+            int valueR = qRed(image.pixel(i, o));
+            int valueG = qGreen(image.pixel(i, o));
+            int valueB = qBlue(image.pixel(i, o));
+
+            valueR = valueR + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
 
             //rowR.append(valueR);
             //rowG.append(valueG);
