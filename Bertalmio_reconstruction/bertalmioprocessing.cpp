@@ -1,4 +1,5 @@
 #include <QImage>
+#include <QRgb>
 #include <QDebug>
 
 #include <qmath.h>
@@ -9,26 +10,107 @@ BertalmioProcessing::BertalmioProcessing()
 {
 }
 
-QImage BertalmioProcessing::anisotropicDiffusion(QImage &image)
+void BertalmioProcessing::anisotropicDiffusion_3(List2DFloat &imageFloat)
 {
     const float KAPPA = 30.0f;
     const float DELTA_T = 1.0f/7.0f;
     const int NUM_ITER = 15;
 
-    QImage result(image);
-    List2DFloat imageFloat;
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    for (int t = 0; t < NUM_ITER; t++)
+    {
+        for (int o = 1; o < height - 1; o++)
+        {
+            for (int i = 1; i < width - 1; i++)
+            {
+                    // nabla
+                    float nablaN_R = imageFloat.r[o][i-1] - imageFloat.r[o][i];
+                    float nablaS_R = imageFloat.r[o][i+1] - imageFloat.r[o][i];
+                    float nablaE_R = imageFloat.r[o+1][i] - imageFloat.r[o][i];
+                    float nablaW_R = imageFloat.r[o-1][i] - imageFloat.r[o][i];
+
+                    float nablaN_G = imageFloat.g[o][i-1] - imageFloat.g[o][i];
+                    float nablaS_G = imageFloat.g[o][i+1] - imageFloat.g[o][i];
+                    float nablaE_G = imageFloat.g[o+1][i] - imageFloat.g[o][i];
+                    float nablaW_G = imageFloat.g[o-1][i] - imageFloat.g[o][i];
+
+                    float nablaN_B = imageFloat.b[o][i-1] - imageFloat.b[o][i];
+                    float nablaS_B = imageFloat.b[o][i+1] - imageFloat.b[o][i];
+                    float nablaE_B = imageFloat.b[o+1][i] - imageFloat.b[o][i];
+                    float nablaW_B = imageFloat.b[o-1][i] - imageFloat.b[o][i];
+
+                    // c - gauss
+                    float cN_R = qExp(-qPow(nablaN_R/KAPPA,2));
+                    float cS_R = qExp(-qPow(nablaS_R/KAPPA,2));
+                    float cE_R = qExp(-qPow(nablaE_R/KAPPA,2));
+                    float cW_R = qExp(-qPow(nablaW_R/KAPPA,2));
+
+                    float cN_G = qExp(-qPow(nablaN_G/KAPPA,2));
+                    float cS_G = qExp(-qPow(nablaS_G/KAPPA,2));
+                    float cE_G = qExp(-qPow(nablaE_G/KAPPA,2));
+                    float cW_G = qExp(-qPow(nablaW_G/KAPPA,2));
+
+                    float cN_B = qExp(-qPow(nablaN_B/KAPPA,2));
+                    float cS_B = qExp(-qPow(nablaS_B/KAPPA,2));
+                    float cE_B = qExp(-qPow(nablaE_B/KAPPA,2));
+                    float cW_B = qExp(-qPow(nablaW_B/KAPPA,2));
+
+                    /*
+                    // c - second one
+                    float cN_R = 1.0f / (1 + qPow(nablaN_R/KAPPA,2));
+                    float cS_R = 1.0f / (1 + qPow(nablaS_R/KAPPA,2));
+                    float cE_R = 1.0f / (1 + qPow(nablaE_R/KAPPA,2));
+                    float cW_R = 1.0f / (1 + qPow(nablaW_R/KAPPA,2));
+
+                    float cN_G = 1.0f / (1 + qPow(nablaN_G/KAPPA,2));
+                    float cS_G = 1.0f / (1 + qPow(nablaS_G/KAPPA,2));
+                    float cE_G = 1.0f / (1 + qPow(nablaE_G/KAPPA,2));
+                    float cW_G = 1.0f / (1 + qPow(nablaW_G/KAPPA,2));
+
+                    float cN_B = 1.0f / (1 + qPow(nablaN_B/KAPPA,2));
+                    float cS_B = 1.0f / (1 + qPow(nablaS_B/KAPPA,2));
+                    float cE_B = 1.0f / (1 + qPow(nablaE_B/KAPPA,2));
+                    float cW_B = 1.0f / (1 + qPow(nablaW_B/KAPPA,2));
+                    */
+
+                    // application
+                    imageFloat.r[o][i] = imageFloat.r[o][i] + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
+                    imageFloat.g[o][i] = imageFloat.g[o][i] + DELTA_T * (nablaN_G * cN_G + nablaS_G * cS_G + nablaE_G * cE_G + nablaW_G * cW_G);
+                    imageFloat.b[o][i] = imageFloat.b[o][i] + DELTA_T * (nablaN_B * cN_B + nablaS_B * cS_B + nablaE_B * cE_B + nablaW_B * cW_B);
+
+                    // debug
+                    //qDebug() << DELTA_T << nablaN_R << cN_R << imageFloat.r[o][i];
+            }
+        }
+    }
+}
+
+BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloat &imageFloat)
+{
+    List2DFloat result;
     QList<float> rowTemp;
 
-    for (int i = 0; i < image.width(); i++)
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    /*
+     * 0  1  0
+     * 1 -4  1
+     * 0  1  0
+     */    
+
+    for (int i = 0; i < width; i++)
     {
         rowTemp.append(0);
     }
 
-    imageFloat.r.append(rowTemp);
-    imageFloat.g.append(rowTemp);
-    imageFloat.b.append(rowTemp);
+    result.r.append(rowTemp);
+    result.g.append(rowTemp);
+    result.b.append(rowTemp);
 
-    for (int o = 1; o < image.height() - 1; o++)
+    for (int o = 1; o < height - 1; o++)
     {
         QList<float> rowR;
         QList<float> rowG;
@@ -38,103 +120,11 @@ QImage BertalmioProcessing::anisotropicDiffusion(QImage &image)
         rowG.append(0);
         rowB.append(0);
 
-        for (int i = 1; i < image.width() - 1; i++)
+        for (int i = 1; i < width - 1; i++)
         {
-            // nabla
-            int nablaN_R = qRed(image.pixel(i-1, o)) - qRed(image.pixel(i, o));
-            int nablaS_R = qRed(image.pixel(i+1, o)) - qRed(image.pixel(i, o));
-            int nablaE_R = qRed(image.pixel(i, o+1)) - qRed(image.pixel(i, o));
-            int nablaW_R = qRed(image.pixel(i, o-1)) - qRed(image.pixel(i, o));
-
-            int nablaN_G = qGreen(image.pixel(i-1, o)) - qGreen(image.pixel(i, o));
-            int nablaS_G = qGreen(image.pixel(i+1, o)) - qGreen(image.pixel(i, o));
-            int nablaE_G = qGreen(image.pixel(i, o+1)) - qGreen(image.pixel(i, o));
-            int nablaW_G = qGreen(image.pixel(i, o-1)) - qGreen(image.pixel(i, o));
-
-            int nablaN_B = qBlue(image.pixel(i-1, o)) - qBlue(image.pixel(i, o));
-            int nablaS_B = qBlue(image.pixel(i+1, o)) - qBlue(image.pixel(i, o));
-            int nablaE_B = qBlue(image.pixel(i, o+1)) - qBlue(image.pixel(i, o));
-            int nablaW_B = qBlue(image.pixel(i, o-1)) - qBlue(image.pixel(i, o));
-
-            // c - gauss
-            float cN_R = qExp(-qPow(nablaN_R/KAPPA,2));
-            float cS_R = qExp(-qPow(nablaS_R/KAPPA,2));
-            float cE_R = qExp(-qPow(nablaE_R/KAPPA,2));
-            float cW_R = qExp(-qPow(nablaW_R/KAPPA,2));
-
-            float cN_G = qExp(-qPow(nablaN_G/KAPPA,2));
-            float cS_G = qExp(-qPow(nablaS_G/KAPPA,2));
-            float cE_G = qExp(-qPow(nablaE_G/KAPPA,2));
-            float cW_G = qExp(-qPow(nablaW_G/KAPPA,2));
-
-            float cN_B = qExp(-qPow(nablaN_B/KAPPA,2));
-            float cS_B = qExp(-qPow(nablaS_B/KAPPA,2));
-            float cE_B = qExp(-qPow(nablaE_B/KAPPA,2));
-            float cW_B = qExp(-qPow(nablaW_B/KAPPA,2));
-
-            // application
-            int valueR = qRed(image.pixel(i, o));
-            int valueG = qGreen(image.pixel(i, o));
-            int valueB = qBlue(image.pixel(i, o));
-
-            valueR = valueR + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
-
-            //rowR.append(valueR);
-            //rowG.append(valueG);
-            //rowB.append(valueB);
-        }
-
-        rowR.append(0);
-        rowG.append(0);
-        rowB.append(0);
-
-        imageFloat.r.append(rowR);
-        imageFloat.g.append(rowG);
-        imageFloat.b.append(rowB);
-    }
-
-    imageFloat.r.append(rowTemp);
-    imageFloat.g.append(rowTemp);
-    imageFloat.b.append(rowTemp);
-
-    return result;
-}
-
-BertalmioProcessing::List2DInt BertalmioProcessing::laplace_7(QImage &image)
-{
-    List2DInt result;
-    QList<int> rowTemp;
-
-    /*
-     * 0  1  0
-     * 1 -4  1
-     * 0  1  0
-     */    
-
-    for (int i = 0; i < image.width(); i++)
-    {
-        rowTemp.append(0);
-    }
-
-    result.r.append(rowTemp);
-    result.g.append(rowTemp);
-    result.b.append(rowTemp);
-
-    for (int o = 1; o < image.height() - 1; o++)
-    {
-        QList<int> rowR;
-        QList<int> rowG;
-        QList<int> rowB;
-
-        rowR.append(0);
-        rowG.append(0);
-        rowB.append(0);
-
-        for (int i = 1; i < image.width() - 1; i++)
-        {
-            int valueR = qRed(image.pixel(i, o-1)) + qRed(image.pixel(i-1, o)) + qRed(image.pixel(i+1, o)) + qRed(image.pixel(i, o+1)) - 4 * qRed(image.pixel(i, o));
-            int valueG = qGreen(image.pixel(i, o-1)) + qGreen(image.pixel(i-1, o)) + qGreen(image.pixel(i+1, o)) + qGreen(image.pixel(i, o+1)) - 4 * qGreen(image.pixel(i, o));
-            int valueB = qBlue(image.pixel(i, o-1)) + qBlue(image.pixel(i-1, o)) + qBlue(image.pixel(i+1, o)) + qBlue(image.pixel(i, o+1)) - 4 * qBlue(image.pixel(i, o));
+            float valueR = imageFloat.r[o-1][i] + imageFloat.r[o][i-1] + imageFloat.r[o][i+1] + imageFloat.r[o+1][i] - 4 * imageFloat.r[o][i];
+            float valueG = imageFloat.g[o-1][i] + imageFloat.g[o][i-1] + imageFloat.g[o][i+1] + imageFloat.g[o+1][i] - 4 * imageFloat.g[o][i];
+            float valueB = imageFloat.b[o-1][i] + imageFloat.b[o][i-1] + imageFloat.b[o][i+1] + imageFloat.b[o+1][i] - 4 * imageFloat.b[o][i];
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -157,14 +147,14 @@ BertalmioProcessing::List2DInt BertalmioProcessing::laplace_7(QImage &image)
     return result;
 }
 
-BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(List2DInt &laplace)
+BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(const List2DFloat &laplace)
 {
     GradientLaplace result;    
-    QList<Element> rowTemp;
+    QList<ElementFloat> rowTemp;
 
     for (int i = 0; i < laplace.r[0].count(); i++)
     {
-        rowTemp.append(Element(0,0));
+        rowTemp.append(ElementFloat(0.0f, 0.0f));
     }
 
     result.r.append(rowTemp);
@@ -173,33 +163,33 @@ BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(List
 
     for (int o = 1; o < laplace.r.count() - 1; o++)
     {
-        QList<Element> rowR;
-        QList<Element> rowG;
-        QList<Element> rowB;
+        QList<ElementFloat> rowR;
+        QList<ElementFloat> rowG;
+        QList<ElementFloat> rowB;
 
-        rowR.append(Element(0,0));
-        rowG.append(Element(0,0));
-        rowB.append(Element(0,0));
+        rowR.append(ElementFloat(0.0f, 0.0f));
+        rowG.append(ElementFloat(0.0f, 0.0f));
+        rowB.append(ElementFloat(0.0f, 0.0f));
 
         for (int i = 1; i < laplace.r[0].count() - 1; i++)
         {
-            int xR = laplace.r[o][i+1] - laplace.r[o][i-1];
-            int yR = laplace.r[o+1][i] - laplace.r[o-1][i];
+            float xR = laplace.r[o][i+1] - laplace.r[o][i-1];
+            float yR = laplace.r[o+1][i] - laplace.r[o-1][i];
 
-            int xG = laplace.g[o][i+1] - laplace.g[o][i-1];
-            int yG = laplace.g[o+1][i] - laplace.g[o-1][i];
+            float xG = laplace.g[o][i+1] - laplace.g[o][i-1];
+            float yG = laplace.g[o+1][i] - laplace.g[o-1][i];
 
-            int xB = laplace.b[o][i+1] - laplace.b[o][i-1];
-            int yB = laplace.b[o+1][i] - laplace.b[o-1][i];
+            float xB = laplace.b[o][i+1] - laplace.b[o][i-1];
+            float yB = laplace.b[o+1][i] - laplace.b[o-1][i];
 
-            rowR.append(Element(xR, yR));
-            rowG.append(Element(xG, yG));
-            rowB.append(Element(xB, yB));
+            rowR.append(ElementFloat(xR, yR));
+            rowG.append(ElementFloat(xG, yG));
+            rowB.append(ElementFloat(xB, yB));
         }
 
-        rowR.append(Element(0,0));
-        rowG.append(Element(0,0));
-        rowB.append(Element(0,0));
+        rowR.append(ElementFloat(0.0f, 0.0f));
+        rowG.append(ElementFloat(0.0f, 0.0f));
+        rowB.append(ElementFloat(0.0f, 0.0f));
 
         result.r.append(rowR);
         result.g.append(rowG);
@@ -213,14 +203,17 @@ BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(List
     return result;
 }
 
-BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(QImage &image)
+BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(const List2DFloat &imageFloat)
 {
     // Right difference
 
     IsophoteDirection result;
     QList<ElementFloat> rowTemp;
 
-    for (int i = 0; i < image.width(); i++)
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    for (int i = 0; i < width; i++)
     {
         rowTemp.append(ElementFloat(0,0));
     }
@@ -229,7 +222,7 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
     result.g.append(rowTemp);
     result.b.append(rowTemp);
 
-    for (int o = 1; o < image.height() - 1; o++)
+    for (int o = 1; o < height - 1; o++)
     {
         QList<ElementFloat> rowR;
         QList<ElementFloat> rowG;
@@ -239,22 +232,22 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
         rowG.append(ElementFloat(0,0));
         rowB.append(ElementFloat(0,0));
 
-        for (int i = 1; i < image.width() - 1; i++)
-        {
-            int xUpR = qRed(image.pixel(i, o+1)) - qRed(image.pixel(i, o)); // Here have to be added minus
-            int yUpR = qRed(image.pixel(i+1, o)) - qRed(image.pixel(i, o));
+        for (int i = 1; i < width - 1; i++)
+        {           
+            float xUpR = imageFloat.r[o+1][i] - imageFloat.r[o][i]; // Here have to be added minus
+            float yUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i];
             float downR = qSqrt(xUpR * xUpR + yUpR * yUpR);
             float resultXR = downR != 0 ? -(xUpR/downR) : 0;
             float resultYR = downR != 0 ? yUpR/downR : 0;
 
-            int xUpG = qGreen(image.pixel(i, o+1)) - qGreen(image.pixel(i, o)); // Here have to be added minus
-            int yUpG = qGreen(image.pixel(i+1, o)) - qGreen(image.pixel(i, o));
+            float xUpG = imageFloat.g[o+1][i] - imageFloat.g[o][i]; // Here have to be added minus
+            float yUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i];
             float downG = qSqrt(xUpG * xUpG + yUpG * yUpG);
             float resultXG = downG != 0 ? -(xUpG/downG) : 0;
             float resultYG = downG != 0 ? yUpG/downG : 0;
 
-            int xUpB = qBlue(image.pixel(i, o+1)) - qBlue(image.pixel(i, o)); // Here have to be added minus
-            int yUpB = qBlue(image.pixel(i+1, o)) - qBlue(image.pixel(i, o));
+            float xUpB = imageFloat.b[o+1][i] - imageFloat.b[o][i]; // Here have to be added minus
+            float yUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
             float downB = qSqrt(xUpB * xUpB + yUpB * yUpB);
             float resultXB = downB != 0 ? -(xUpB/downB) : 0;
             float resultYB = downB != 0 ? yUpB/downB : 0;
@@ -280,21 +273,21 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
     return result;
 }
 
-BertalmioProcessing::List2DInt BertalmioProcessing::beta_9(BertalmioProcessing::GradientLaplace &gradient, BertalmioProcessing::IsophoteDirection &isophote)
+BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote)
 {
-    List2DInt result;
+    List2DFloat result;
 
     for (int o = 0; o < gradient.r.count(); o++)
     {
-        QList<int> rowR;
-        QList<int> rowG;
-        QList<int> rowB;
+        QList<float> rowR;
+        QList<float> rowG;
+        QList<float> rowB;
 
         for (int i = 0; i < gradient.r[0].count(); i++)
         {
-            int valueR = qRound(gradient.r[o][i].x * isophote.r[o][i].x + gradient.r[o][i].y * isophote.r[o][i].y);
-            int valueG = qRound(gradient.g[o][i].x * isophote.g[o][i].x + gradient.g[o][i].y * isophote.g[o][i].y);
-            int valueB = qRound(gradient.b[o][i].x * isophote.b[o][i].x + gradient.b[o][i].y * isophote.b[o][i].y);
+            float valueR = qRound(gradient.r[o][i].x * isophote.r[o][i].x + gradient.r[o][i].y * isophote.r[o][i].y);
+            float valueG = qRound(gradient.g[o][i].x * isophote.g[o][i].x + gradient.g[o][i].y * isophote.g[o][i].y);
+            float valueB = qRound(gradient.b[o][i].x * isophote.b[o][i].x + gradient.b[o][i].y * isophote.b[o][i].y);
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -309,12 +302,117 @@ BertalmioProcessing::List2DInt BertalmioProcessing::beta_9(BertalmioProcessing::
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(QImage &image, List2DInt &beta)
+BertalmioProcessing::List2DFloat BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageFloat, const List2DFloat &partialResult)
+{
+    const float DELTA_T = 0.1f;
+
+    List2DFloat result;
+
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    for (int o = 0; o < height; o++)
+    {
+        for (int i = 0; i < width; i++)
+        {
+            imageFloat.r[o][i] = imageFloat.r[o][i] + DELTA_T * partialResult.r[o][i];
+            imageFloat.g[o][i] = imageFloat.g[o][i] + DELTA_T * partialResult.g[o][i];
+            imageFloat.b[o][i] = imageFloat.b[o][i] + DELTA_T * partialResult.b[o][i];
+        }
+    }
+
+    return result;
+}
+
+bool BertalmioProcessing::stabilityTest(const BertalmioProcessing::List2DFloat &partialResult)
+{
+    bool result = true;
+
+    int height = partialResult.r.count();
+    int width = partialResult.r[0].count();
+
+    for (int o = 0; o < height; o++)
+    {
+        for (int i = 0; i < width; i++)
+        {
+            int valueR = qRound(partialResult.r[o][i]);
+            int valueG = qRound(partialResult.g[o][i]);
+            int valueB = qRound(partialResult.b[o][i]);
+
+            if (valueR != 0 || valueG != 0 || valueB != 0)
+            {
+                return false;
+            }
+        }
+    }
+
+    return result;
+}
+
+BertalmioProcessing::List2DFloat BertalmioProcessing::imageToFloat(const QImage &image)
+{
+    List2DFloat result;
+
+    for (int o = 0; o < image.height(); o++)
+    {
+        QList<float> rowR;
+        QList<float> rowG;
+        QList<float> rowB;
+
+        for (int i = 0; i < image.width(); i++)
+        {
+            rowR.append(qRed(image.pixel(i, o)));
+            rowG.append(qGreen(image.pixel(i, o)));
+            rowB.append(qBlue(image.pixel(i, o)));
+        }
+
+        result.r.append(rowR);
+        result.g.append(rowG);
+        result.b.append(rowB);
+    }
+
+    return result;
+}
+
+QImage BertalmioProcessing::floatToImage(const List2DFloat &imageFloat)
+{
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    QImage result(width, height, QImage::Format_ARGB32);
+
+    for (int o = 0; o < height; o++)
+    {
+        for (int i = 0; i < width; i++)
+        {
+            int valueR = qRound(imageFloat.r[o][i]);
+            int valueG = qRound(imageFloat.g[o][i]);
+            int valueB = qRound(imageFloat.b[o][i]);
+
+            valueR = qMin(valueR, 255);
+            valueG = qMin(valueG, 255);
+            valueB = qMin(valueB, 255);
+
+            valueR = qMax(valueR, 0);
+            valueG = qMax(valueG, 0);
+            valueB = qMax(valueB, 0);
+
+            result.setPixel(i, o, qRgb(valueR, valueG, valueB));
+        }
+    }
+
+    return result;
+}
+
+BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta)
 {
     List2DFloat result;
     QList<float> rowTemp;
 
-    for (int i = 0; i < image.width(); i++)
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    for (int i = 0; i < width; i++)
     {
         rowTemp.append(0);
     }
@@ -323,7 +421,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(QImage &i
     result.g.append(rowTemp);
     result.b.append(rowTemp);
 
-    for (int o = 1; o < image.height() - 1; o++)
+    for (int o = 1; o < height - 1; o++)
     {
         QList<float> rowR;
         QList<float> rowG;
@@ -333,37 +431,37 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(QImage &i
         rowG.append(0);
         rowB.append(0);
 
-        for (int i = 1; i < image.width() - 1; i++)
+        for (int i = 1; i < width - 1; i++)
         {
-            int xbR = qRed(image.pixel(i, o)) - qRed(image.pixel(i-1, o));
-            int xfR = qRed(image.pixel(i+1, o)) - qRed(image.pixel(i, o));
-            int ybR = qRed(image.pixel(i, o)) - qRed(image.pixel(i, o-1));
-            int yfR = qRed(image.pixel(i, o+1)) - qRed(image.pixel(i, o));
+            float xbR = imageFloat.r[o][i] - imageFloat.r[o][i-1];
+            float xfR = imageFloat.r[o][i+1] - imageFloat.r[o][i];
+            float ybR = imageFloat.r[o][i] - imageFloat.r[o-1][i];
+            float yfR = imageFloat.r[o+1][i] - imageFloat.r[o][i];
 
-            int xbG = qGreen(image.pixel(i, o)) - qGreen(image.pixel(i-1, o));
-            int xfG = qGreen(image.pixel(i+1, o)) - qGreen(image.pixel(i, o));
-            int ybG = qGreen(image.pixel(i, o)) - qGreen(image.pixel(i, o-1));
-            int yfG = qGreen(image.pixel(i, o+1)) - qGreen(image.pixel(i, o));
+            float xbG = imageFloat.g[o][i] - imageFloat.g[o][i-1];
+            float xfG = imageFloat.g[o][i+1] - imageFloat.g[o][i];
+            float ybG = imageFloat.g[o][i] - imageFloat.g[o-1][i];
+            float yfG = imageFloat.g[o+1][i] - imageFloat.g[o][i];
 
-            int xbB = qBlue(image.pixel(i, o)) - qBlue(image.pixel(i-1, o));
-            int xfB = qBlue(image.pixel(i+1, o)) - qBlue(image.pixel(i, o));
-            int ybB = qBlue(image.pixel(i, o)) - qBlue(image.pixel(i, o-1));
-            int yfB = qBlue(image.pixel(i, o+1)) - qBlue(image.pixel(i, o));
+            float xbB = imageFloat.b[o][i] - imageFloat.b[o][i-1];
+            float xfB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
+            float ybB = imageFloat.b[o][i] - imageFloat.b[o-1][i];
+            float yfB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
 
             // Red
             if (beta.r[o][i] > 0)
             {
-                xbR = qMin(0, xbR);
-                xfR = qMax(0, xfR);
-                ybR = qMin(0, ybR);
-                yfR = qMax(0, yfR);
+                xbR = qMin(0.0f, xbR);
+                xfR = qMax(0.0f, xfR);
+                ybR = qMin(0.0f, ybR);
+                yfR = qMax(0.0f, yfR);
             }
             else if (beta.r[o][i] < 0)
             {
-                xbR = qMax(0, xbR);
-                xfR = qMin(0, xfR);
-                ybR = qMax(0, ybR);
-                yfR = qMin(0, yfR);
+                xbR = qMax(0.0f, xbR);
+                xfR = qMin(0.0f, xfR);
+                ybR = qMax(0.0f, ybR);
+                yfR = qMin(0.0f, yfR);
             }
             else
             {
@@ -373,17 +471,17 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(QImage &i
             // Green
             if (beta.g[o][i] > 0)
             {
-                xbG = qMin(0, xbG);
-                xfG = qMax(0, xfG);
-                ybG = qMin(0, ybG);
-                yfG = qMax(0, yfG);
+                xbG = qMin(0.0f, xbG);
+                xfG = qMax(0.0f, xfG);
+                ybG = qMin(0.0f, ybG);
+                yfG = qMax(0.0f, yfG);
             }
             else if (beta.g[o][i] < 0)
             {
-                xbG = qMax(0, xbG);
-                xfG = qMin(0, xfG);
-                ybG = qMax(0, ybG);
-                yfG = qMin(0, yfG);
+                xbG = qMax(0.0f, xbG);
+                xfG = qMin(0.0f, xfG);
+                ybG = qMax(0.0f, ybG);
+                yfG = qMin(0.0f, yfG);
             }
             else
             {
@@ -393,17 +491,17 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(QImage &i
             // Blue
             if (beta.b[o][i] > 0)
             {
-                xbB = qMin(0, xbB);
-                xfB = qMax(0, xfB);
-                ybB = qMin(0, ybB);
-                yfB = qMax(0, yfB);
+                xbB = qMin(0.0f, xbB);
+                xfB = qMax(0.0f, xfB);
+                ybB = qMin(0.0f, ybB);
+                yfB = qMax(0.0f, yfB);
             }
             else if (beta.b[o][i] < 0)
             {
-                xbB = qMax(0, xbB);
-                xfB = qMin(0, xfB);
-                ybB = qMax(0, ybB);
-                yfB = qMin(0, yfB);
+                xbB = qMax(0.0f, xbB);
+                xfB = qMin(0.0f, xfB);
+                ybB = qMax(0.0f, ybB);
+                yfB = qMin(0.0f, yfB);
             }
             else
             {
@@ -436,7 +534,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(QImage &i
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::partialResult_5(BertalmioProcessing::List2DInt &beta, BertalmioProcessing::List2DFloat &gradient)
+BertalmioProcessing::List2DFloat BertalmioProcessing::partialResult_5(const List2DFloat &beta, const List2DFloat &gradient)
 {
     List2DFloat result;
 

@@ -7,14 +7,6 @@
 class BertalmioProcessing
 {
 public:
-    struct Element
-    {
-        int x;
-        int y;
-
-        Element(int x_h, int y_h) : x(x_h), y(y_h) {}
-    };
-
     struct ElementFloat
     {
         float x;
@@ -25,9 +17,9 @@ public:
 
     struct GradientLaplace
     {
-        QList< QList<Element> > r;
-        QList< QList<Element> > g;
-        QList< QList<Element> > b;
+        QList< QList<ElementFloat> > r;
+        QList< QList<ElementFloat> > g;
+        QList< QList<ElementFloat> > b;
     };
 
     struct IsophoteDirection
@@ -35,13 +27,6 @@ public:
         QList< QList<ElementFloat> > r;
         QList< QList<ElementFloat> > g;
         QList< QList<ElementFloat> > b;
-    };
-
-    struct List2DInt
-    {
-        QList< QList<int> > r;
-        QList< QList<int> > g;
-        QList< QList<int> > b;
     };
 
     struct List2DFloat
@@ -53,14 +38,19 @@ public:
 
     BertalmioProcessing();
 
-    QImage anisotropicDiffusion(QImage &image);
+    void anisotropicDiffusion_3(List2DFloat &imageFloat);
 
-    List2DFloat gradientInput_10(QImage &image, List2DInt &beta);
-    List2DFloat partialResult_5(List2DInt &beta, List2DFloat &gradient);
-    List2DInt laplace_7(QImage &image);
-    GradientLaplace gradientLaplace_6(List2DInt &laplace);
-    IsophoteDirection isophoteDirection_8(QImage &image);
-    List2DInt beta_9(GradientLaplace &gradient, IsophoteDirection &isophote);
+    List2DFloat gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta);
+    List2DFloat partialResult_5(const List2DFloat &beta, const List2DFloat &gradient);
+    List2DFloat laplace_7(const List2DFloat &imageFloat);
+    GradientLaplace gradientLaplace_6(const List2DFloat &laplace);
+    IsophoteDirection isophoteDirection_8(const List2DFloat &imageFloat);
+    List2DFloat beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote);
+    List2DFloat updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult);
+
+    bool stabilityTest(const List2DFloat &partialResult);
+    List2DFloat imageToFloat(const QImage &image);
+    QImage floatToImage(const List2DFloat &imageFloat);
 };
 
 #endif // BERTALMIOPROCESSING_H
