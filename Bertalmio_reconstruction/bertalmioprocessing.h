@@ -39,6 +39,7 @@ public:
     BertalmioProcessing();
 
     void anisotropicDiffusion_3(List2DFloat &imageFloat);
+    void updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult);
 
     List2DFloat gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta);
     List2DFloat partialResult_5(const List2DFloat &beta, const List2DFloat &gradient);
@@ -46,7 +47,6 @@ public:
     GradientLaplace gradientLaplace_6(const List2DFloat &laplace);
     IsophoteDirection isophoteDirection_8(const List2DFloat &imageFloat);
     List2DFloat beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote);
-    List2DFloat updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult);
 
     bool stabilityTest(const List2DFloat &partialResult);
     List2DFloat imageToFloat(const QImage &image);

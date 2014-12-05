@@ -76,12 +76,17 @@ void BertalmioProcessing::anisotropicDiffusion_3(List2DFloat &imageFloat)
                     */
 
                     // application
-                    imageFloat.r[o][i] = imageFloat.r[o][i] + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
-                    imageFloat.g[o][i] = imageFloat.g[o][i] + DELTA_T * (nablaN_G * cN_G + nablaS_G * cS_G + nablaE_G * cE_G + nablaW_G * cW_G);
-                    imageFloat.b[o][i] = imageFloat.b[o][i] + DELTA_T * (nablaN_B * cN_B + nablaS_B * cS_B + nablaE_B * cE_B + nablaW_B * cW_B);
+                    float valueR = imageFloat.r[o][i] + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
+                    float valueG = imageFloat.g[o][i] + DELTA_T * (nablaN_G * cN_G + nablaS_G * cS_G + nablaE_G * cE_G + nablaW_G * cW_G);
+                    float valueB = imageFloat.b[o][i] + DELTA_T * (nablaN_B * cN_B + nablaS_B * cS_B + nablaE_B * cE_B + nablaW_B * cW_B);
 
-                    // debug
-                    //qDebug() << DELTA_T << nablaN_R << cN_R << imageFloat.r[o][i];
+                    valueR = qIsFinite(valueR) ? valueR : 0;
+                    valueG = qIsFinite(valueG) ? valueG : 0;
+                    valueB = qIsFinite(valueB) ? valueB : 0;
+
+                    imageFloat.r[o][i] = valueR;
+                    imageFloat.g[o][i] = valueG;
+                    imageFloat.b[o][i] = valueB;
             }
         }
     }
@@ -125,6 +130,10 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
             float valueR = imageFloat.r[o-1][i] + imageFloat.r[o][i-1] + imageFloat.r[o][i+1] + imageFloat.r[o+1][i] - 4 * imageFloat.r[o][i];
             float valueG = imageFloat.g[o-1][i] + imageFloat.g[o][i-1] + imageFloat.g[o][i+1] + imageFloat.g[o+1][i] - 4 * imageFloat.g[o][i];
             float valueB = imageFloat.b[o-1][i] + imageFloat.b[o][i-1] + imageFloat.b[o][i+1] + imageFloat.b[o+1][i] - 4 * imageFloat.b[o][i];
+
+            valueR = qIsFinite(valueR) ? valueR : 0;
+            valueG = qIsFinite(valueG) ? valueG : 0;
+            valueB = qIsFinite(valueB) ? valueB : 0;
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -182,6 +191,15 @@ BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(cons
             float xB = laplace.b[o][i+1] - laplace.b[o][i-1];
             float yB = laplace.b[o+1][i] - laplace.b[o-1][i];
 
+            xR = qIsFinite(xR) ? xR : 0;
+            yR = qIsFinite(yR) ? yR : 0;
+
+            xG = qIsFinite(xG) ? xG : 0;
+            yG = qIsFinite(yG) ? yG : 0;
+
+            xB = qIsFinite(xB) ? xB : 0;
+            yB = qIsFinite(yB) ? yB : 0;
+
             rowR.append(ElementFloat(xR, yR));
             rowG.append(ElementFloat(xG, yG));
             rowB.append(ElementFloat(xB, yB));
@@ -237,20 +255,29 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
             float xUpR = imageFloat.r[o+1][i] - imageFloat.r[o][i]; // Here have to be added minus
             float yUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i];
             float downR = qSqrt(xUpR * xUpR + yUpR * yUpR);
-            float resultXR = downR != 0 ? -(xUpR/downR) : 0;
-            float resultYR = downR != 0 ? yUpR/downR : 0;
+            float resultXR = -(xUpR/downR);
+            float resultYR = yUpR/downR;
 
             float xUpG = imageFloat.g[o+1][i] - imageFloat.g[o][i]; // Here have to be added minus
             float yUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i];
             float downG = qSqrt(xUpG * xUpG + yUpG * yUpG);
-            float resultXG = downG != 0 ? -(xUpG/downG) : 0;
-            float resultYG = downG != 0 ? yUpG/downG : 0;
+            float resultXG = -(xUpG/downG);
+            float resultYG = yUpG/downG;
 
             float xUpB = imageFloat.b[o+1][i] - imageFloat.b[o][i]; // Here have to be added minus
             float yUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
             float downB = qSqrt(xUpB * xUpB + yUpB * yUpB);
-            float resultXB = downB != 0 ? -(xUpB/downB) : 0;
-            float resultYB = downB != 0 ? yUpB/downB : 0;
+            float resultXB = -(xUpB/downB);
+            float resultYB = yUpB/downB;
+
+            resultXR = qIsFinite(resultXR) ? resultXR : 0;
+            resultYR = qIsFinite(resultYR) ? resultYR : 0;
+
+            resultXG = qIsFinite(resultXG) ? resultXG : 0;
+            resultYG = qIsFinite(resultYG) ? resultYG : 0;
+
+            resultXB = qIsFinite(resultXB) ? resultXB : 0;
+            resultYB = qIsFinite(resultYB) ? resultYB : 0;
 
             rowR.append(ElementFloat(resultXR, resultYR));
             rowG.append(ElementFloat(resultXG, resultYG));
@@ -289,6 +316,10 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLapla
             float valueG = qRound(gradient.g[o][i].x * isophote.g[o][i].x + gradient.g[o][i].y * isophote.g[o][i].y);
             float valueB = qRound(gradient.b[o][i].x * isophote.b[o][i].x + gradient.b[o][i].y * isophote.b[o][i].y);
 
+            valueR = qIsFinite(valueR) ? valueR : 0;
+            valueG = qIsFinite(valueG) ? valueG : 0;
+            valueB = qIsFinite(valueB) ? valueB : 0;
+
             rowR.append(valueR);
             rowG.append(valueG);
             rowB.append(valueB);
@@ -302,11 +333,9 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLapla
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageFloat, const List2DFloat &partialResult)
+void BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageFloat, const List2DFloat &partialResult)
 {
     const float DELTA_T = 0.1f;
-
-    List2DFloat result;
 
     int height = imageFloat.r.count();
     int width = imageFloat.r[0].count();
@@ -315,13 +344,19 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::updateImage_4(BertalmioPro
     {
         for (int i = 0; i < width; i++)
         {
-            imageFloat.r[o][i] = imageFloat.r[o][i] + DELTA_T * partialResult.r[o][i];
-            imageFloat.g[o][i] = imageFloat.g[o][i] + DELTA_T * partialResult.g[o][i];
-            imageFloat.b[o][i] = imageFloat.b[o][i] + DELTA_T * partialResult.b[o][i];
+            float valueR = imageFloat.r[o][i] + DELTA_T * partialResult.r[o][i];
+            float valueG = imageFloat.g[o][i] + DELTA_T * partialResult.g[o][i];
+            float valueB = imageFloat.b[o][i] + DELTA_T * partialResult.b[o][i];
+
+            valueR = qIsFinite(valueR) ? valueR : 0;
+            valueG = qIsFinite(valueG) ? valueG : 0;
+            valueB = qIsFinite(valueB) ? valueB : 0;
+
+            imageFloat.r[o][i] = valueR;
+            imageFloat.g[o][i] = valueG;
+            imageFloat.b[o][i] = valueB;
         }
     }
-
-    return result;
 }
 
 bool BertalmioProcessing::stabilityTest(const BertalmioProcessing::List2DFloat &partialResult)
@@ -448,8 +483,10 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             float ybB = imageFloat.b[o][i] - imageFloat.b[o-1][i];
             float yfB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
 
+            // >= - is it correct??
+
             // Red
-            if (beta.r[o][i] > 0)
+            if (beta.r[o][i] >= 0)
             {
                 xbR = qMin(0.0f, xbR);
                 xfR = qMax(0.0f, xfR);
@@ -469,7 +506,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             }
 
             // Green
-            if (beta.g[o][i] > 0)
+            if (beta.g[o][i] >= 0)
             {
                 xbG = qMin(0.0f, xbG);
                 xfG = qMax(0.0f, xfG);
@@ -489,7 +526,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             }
 
             // Blue
-            if (beta.b[o][i] > 0)
+            if (beta.b[o][i] >= 0)
             {
                 xbB = qMin(0.0f, xbB);
                 xfB = qMax(0.0f, xfB);
@@ -512,6 +549,10 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             float valueR = qSqrt(xbR * xbR + xfR * xfR + ybR * ybR + yfR * yfR);
             float valueG = qSqrt(xbG * xbG + xfG * xfG + ybG * ybG + yfG * yfG);
             float valueB = qSqrt(xbB * xbB + xfB * xfB + ybB * ybB + yfB * yfB);
+
+            valueR = qIsFinite(valueR) ? valueR : 0;
+            valueG = qIsFinite(valueG) ? valueG : 0;
+            valueB = qIsFinite(valueB) ? valueB : 0;
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -550,6 +591,10 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::partialResult_5(const List
             float valueG = beta.g[o][i] * gradient.g[o][i];
             float valueB = beta.b[o][i] * gradient.b[o][i];
 
+            valueR = qIsFinite(valueR) ? valueR : 0;
+            valueG = qIsFinite(valueG) ? valueG : 0;
+            valueB = qIsFinite(valueB) ? valueB : 0;
+
             rowR.append(valueR);
             rowG.append(valueG);
             rowB.append(valueB);
@@ -558,7 +603,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::partialResult_5(const List
         result.r.append(rowR);
         result.g.append(rowG);
         result.b.append(rowB);
-    }
+    }        
 
     return result;
 }

@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
         qDebug() << "Initialization...";
 
         bool stable = false;
-        int iteration = 0;
+        //int iteration = 0;
 
         BertalmioProcessing::List2DFloat gradientInput;
         BertalmioProcessing::List2DFloat partialResult;
@@ -64,14 +64,20 @@ int main(int argc, char *argv[])
 
                 bertalmioParts.updateImage_4(inputFloat, partialResult);
 
-                QImage result;
-                result = bertalmioParts.floatToImage(partialResult);
-                result.save("input_" + QString::number(iteration) + ".png");
+                //qDebug() << "Laplace: " << laplace.r[10];
+                //qDebug() << "Beta: " << beta.r[10];
+                //qDebug() << "gradientInput: " << gradientInput.r[10];
+                //qDebug() << "partialResult: " << partialResult.r[10];
+                //qDebug() << "inputFloat: " << inputFloat.r[10];
+
+                //QImage result;
+                //result = bertalmioParts.floatToImage(inputFloat);
+                //result.save("result_" + QString::number(iteration) + ".png");
                 //result = bertalmioParts.floatToImage(laplace);
                 //result.save("laplace_" + QString::number(iteration) + ".png");
                 //result = bertalmioParts.floatToImage(beta);
                 //result.save("beta_" + QString::number(iteration) + ".png");
-                iteration++;
+                //iteration++;
             }
 
             qDebug() << "----------ok----------";
