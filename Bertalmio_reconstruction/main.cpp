@@ -14,10 +14,12 @@ int main(int argc, char *argv[])
     BertalmioProcessing bertalmioParts;
 
     QImage input(QCoreApplication::applicationDirPath() + "/lena.png");
+    QImage mask(QCoreApplication::applicationDirPath() + "/mask.png");
+    QImage mask_full(QCoreApplication::applicationDirPath() + "/mask_full.png");
 
-    if (input.isNull())
+    if (input.isNull() || mask.isNull() || mask_full.isNull())
     {
-        qDebug() << "Image not found!";
+        qDebug() << "Image or mask not found!";
     }
     else
     {
@@ -27,7 +29,7 @@ int main(int argc, char *argv[])
         qDebug() << "Initialization...";
 
         bool stable = false;
-        //int iteration = 0;
+        int iteration = 0;
 
         BertalmioProcessing::List2DFloat gradientInput;
         BertalmioProcessing::List2DFloat partialResult;
@@ -62,8 +64,10 @@ int main(int argc, char *argv[])
                 gradientInput = bertalmioParts.gradientInput_10(inputFloat, beta);
                 partialResult = bertalmioParts.partialResult_5(beta, gradientInput);
 
-                bertalmioParts.updateImage_4(inputFloat, partialResult);
+                bertalmioParts.updateImage_4(inputFloat, partialResult, mask);
 
+                //qDebug() << "Gradient laplace: " << gradientLaplace.r[122][191].x << gradientLaplace.r[122][191].y;
+                //qDebug() << "Isophote: " << isophoteDirection.r[122][191].x << gradientLaplace.r[122][191].y;
                 //qDebug() << "Laplace: " << laplace.r[10];
                 //qDebug() << "Beta: " << beta.r[10];
                 //qDebug() << "gradientInput: " << gradientInput.r[10];
@@ -93,18 +97,27 @@ int main(int argc, char *argv[])
             qDebug() << "----------ok----------";
 
             stable = bertalmioParts.stabilityTest(partialResult);
+
+            QImage result;
+            result = bertalmioParts.floatToImage(inputFloat);
+            result.save("result_" + QString::number(iteration) + ".png");
+            iteration++;
         }
+
+        qDebug() << "-==Ended==-";
     }
 
     /*
     QImage result;
+
     BertalmioProcessing::List2DFloat inputFloat;
+    BertalmioProcessing::List2DFloat anisotropic;
 
     inputFloat = bertalmioParts.imageToFloat(input);
-    bertalmioParts.anisotropicDiffusion_3(inputFloat);
-    result = bertalmioParts.floatToImage(inputFloat);
+    anisotropic = bertalmioParts.anisotropicDiffusion_3(inputFloat);
+    result = bertalmioParts.floatToImage(anisotropic);
 
-    result.save("testoOutput.png");
+    result.save("testoOutput.png");    
     */
 
     /*

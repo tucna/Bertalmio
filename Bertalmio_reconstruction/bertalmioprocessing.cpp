@@ -10,86 +10,110 @@ BertalmioProcessing::BertalmioProcessing()
 {
 }
 
-void BertalmioProcessing::anisotropicDiffusion_3(List2DFloat &imageFloat)
+BertalmioProcessing::List2DFloat BertalmioProcessing::anisotropicDiffusion_3(List2DFloat &imageFloat)
 {
     const float KAPPA = 30.0f;
     const float DELTA_T = 1.0f/7.0f;
     const int NUM_ITER = 15;
 
+    List2DFloat result;
+
     int height = imageFloat.r.count();
     int width = imageFloat.r[0].count();
 
+    // copy because of more iterations
+    for (int o = 0; o < height; o++)
+    {
+        QList<float> rowR;
+        QList<float> rowG;
+        QList<float> rowB;
+
+        for (int i = 0; i < width; i++)
+        {
+            rowR.append(imageFloat.r[o][i]);
+            rowG.append(imageFloat.g[o][i]);
+            rowB.append(imageFloat.b[o][i]);
+        }
+
+        result.r.append(rowR);
+        result.g.append(rowG);
+        result.b.append(rowB);
+    }
+
+    // process
     for (int t = 0; t < NUM_ITER; t++)
     {
         for (int o = 1; o < height - 1; o++)
         {
             for (int i = 1; i < width - 1; i++)
             {
-                    // nabla
-                    float nablaN_R = imageFloat.r[o][i-1] - imageFloat.r[o][i];
-                    float nablaS_R = imageFloat.r[o][i+1] - imageFloat.r[o][i];
-                    float nablaE_R = imageFloat.r[o+1][i] - imageFloat.r[o][i];
-                    float nablaW_R = imageFloat.r[o-1][i] - imageFloat.r[o][i];
+                // nabla
+                float nablaN_R = result.r[o][i-1] - result.r[o][i];
+                float nablaS_R = result.r[o][i+1] - result.r[o][i];
+                float nablaE_R = result.r[o+1][i] - result.r[o][i];
+                float nablaW_R = result.r[o-1][i] - result.r[o][i];
 
-                    float nablaN_G = imageFloat.g[o][i-1] - imageFloat.g[o][i];
-                    float nablaS_G = imageFloat.g[o][i+1] - imageFloat.g[o][i];
-                    float nablaE_G = imageFloat.g[o+1][i] - imageFloat.g[o][i];
-                    float nablaW_G = imageFloat.g[o-1][i] - imageFloat.g[o][i];
+                float nablaN_G = result.g[o][i-1] - result.g[o][i];
+                float nablaS_G = result.g[o][i+1] - result.g[o][i];
+                float nablaE_G = result.g[o+1][i] - result.g[o][i];
+                float nablaW_G = result.g[o-1][i] - result.g[o][i];
 
-                    float nablaN_B = imageFloat.b[o][i-1] - imageFloat.b[o][i];
-                    float nablaS_B = imageFloat.b[o][i+1] - imageFloat.b[o][i];
-                    float nablaE_B = imageFloat.b[o+1][i] - imageFloat.b[o][i];
-                    float nablaW_B = imageFloat.b[o-1][i] - imageFloat.b[o][i];
+                float nablaN_B = result.b[o][i-1] - result.b[o][i];
+                float nablaS_B = result.b[o][i+1] - result.b[o][i];
+                float nablaE_B = result.b[o+1][i] - result.b[o][i];
+                float nablaW_B = result.b[o-1][i] - result.b[o][i];
 
-                    // c - gauss
-                    float cN_R = qExp(-qPow(nablaN_R/KAPPA,2));
-                    float cS_R = qExp(-qPow(nablaS_R/KAPPA,2));
-                    float cE_R = qExp(-qPow(nablaE_R/KAPPA,2));
-                    float cW_R = qExp(-qPow(nablaW_R/KAPPA,2));
+                // c - gauss
+                float cN_R = qExp(-qPow(nablaN_R/KAPPA,2));
+                float cS_R = qExp(-qPow(nablaS_R/KAPPA,2));
+                float cE_R = qExp(-qPow(nablaE_R/KAPPA,2));
+                float cW_R = qExp(-qPow(nablaW_R/KAPPA,2));
 
-                    float cN_G = qExp(-qPow(nablaN_G/KAPPA,2));
-                    float cS_G = qExp(-qPow(nablaS_G/KAPPA,2));
-                    float cE_G = qExp(-qPow(nablaE_G/KAPPA,2));
-                    float cW_G = qExp(-qPow(nablaW_G/KAPPA,2));
+                float cN_G = qExp(-qPow(nablaN_G/KAPPA,2));
+                float cS_G = qExp(-qPow(nablaS_G/KAPPA,2));
+                float cE_G = qExp(-qPow(nablaE_G/KAPPA,2));
+                float cW_G = qExp(-qPow(nablaW_G/KAPPA,2));
 
-                    float cN_B = qExp(-qPow(nablaN_B/KAPPA,2));
-                    float cS_B = qExp(-qPow(nablaS_B/KAPPA,2));
-                    float cE_B = qExp(-qPow(nablaE_B/KAPPA,2));
-                    float cW_B = qExp(-qPow(nablaW_B/KAPPA,2));
+                float cN_B = qExp(-qPow(nablaN_B/KAPPA,2));
+                float cS_B = qExp(-qPow(nablaS_B/KAPPA,2));
+                float cE_B = qExp(-qPow(nablaE_B/KAPPA,2));
+                float cW_B = qExp(-qPow(nablaW_B/KAPPA,2));
 
-                    /*
-                    // c - second one
-                    float cN_R = 1.0f / (1 + qPow(nablaN_R/KAPPA,2));
-                    float cS_R = 1.0f / (1 + qPow(nablaS_R/KAPPA,2));
-                    float cE_R = 1.0f / (1 + qPow(nablaE_R/KAPPA,2));
-                    float cW_R = 1.0f / (1 + qPow(nablaW_R/KAPPA,2));
+                /*
+                // c - second one
+                float cN_R = 1.0f / (1 + qPow(nablaN_R/KAPPA,2));
+                float cS_R = 1.0f / (1 + qPow(nablaS_R/KAPPA,2));
+                float cE_R = 1.0f / (1 + qPow(nablaE_R/KAPPA,2));
+                float cW_R = 1.0f / (1 + qPow(nablaW_R/KAPPA,2));
 
-                    float cN_G = 1.0f / (1 + qPow(nablaN_G/KAPPA,2));
-                    float cS_G = 1.0f / (1 + qPow(nablaS_G/KAPPA,2));
-                    float cE_G = 1.0f / (1 + qPow(nablaE_G/KAPPA,2));
-                    float cW_G = 1.0f / (1 + qPow(nablaW_G/KAPPA,2));
+                float cN_G = 1.0f / (1 + qPow(nablaN_G/KAPPA,2));
+                float cS_G = 1.0f / (1 + qPow(nablaS_G/KAPPA,2));
+                float cE_G = 1.0f / (1 + qPow(nablaE_G/KAPPA,2));
+                float cW_G = 1.0f / (1 + qPow(nablaW_G/KAPPA,2));
 
-                    float cN_B = 1.0f / (1 + qPow(nablaN_B/KAPPA,2));
-                    float cS_B = 1.0f / (1 + qPow(nablaS_B/KAPPA,2));
-                    float cE_B = 1.0f / (1 + qPow(nablaE_B/KAPPA,2));
-                    float cW_B = 1.0f / (1 + qPow(nablaW_B/KAPPA,2));
-                    */
+                float cN_B = 1.0f / (1 + qPow(nablaN_B/KAPPA,2));
+                float cS_B = 1.0f / (1 + qPow(nablaS_B/KAPPA,2));
+                float cE_B = 1.0f / (1 + qPow(nablaE_B/KAPPA,2));
+                float cW_B = 1.0f / (1 + qPow(nablaW_B/KAPPA,2));
+                */
 
-                    // application
-                    float valueR = imageFloat.r[o][i] + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
-                    float valueG = imageFloat.g[o][i] + DELTA_T * (nablaN_G * cN_G + nablaS_G * cS_G + nablaE_G * cE_G + nablaW_G * cW_G);
-                    float valueB = imageFloat.b[o][i] + DELTA_T * (nablaN_B * cN_B + nablaS_B * cS_B + nablaE_B * cE_B + nablaW_B * cW_B);
+                // application
+                float valueR = result.r[o][i] + DELTA_T * (nablaN_R * cN_R + nablaS_R * cS_R + nablaE_R * cE_R + nablaW_R * cW_R);
+                float valueG = result.g[o][i] + DELTA_T * (nablaN_G * cN_G + nablaS_G * cS_G + nablaE_G * cE_G + nablaW_G * cW_G);
+                float valueB = result.b[o][i] + DELTA_T * (nablaN_B * cN_B + nablaS_B * cS_B + nablaE_B * cE_B + nablaW_B * cW_B);
 
-                    valueR = qIsFinite(valueR) ? valueR : 0;
-                    valueG = qIsFinite(valueG) ? valueG : 0;
-                    valueB = qIsFinite(valueB) ? valueB : 0;
+                valueR = qIsFinite(valueR) ? valueR : 0;
+                valueG = qIsFinite(valueG) ? valueG : 0;
+                valueB = qIsFinite(valueB) ? valueB : 0;
 
-                    imageFloat.r[o][i] = valueR;
-                    imageFloat.g[o][i] = valueG;
-                    imageFloat.b[o][i] = valueB;
+                result.r[o][i] = valueR;
+                result.g[o][i] = valueG;
+                result.b[o][i] = valueB;
             }
         }
     }
+
+    return result;
 }
 
 BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloat &imageFloat)
@@ -250,22 +274,24 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
         rowG.append(ElementFloat(0,0));
         rowB.append(ElementFloat(0,0));
 
+        // central differencies
+
         for (int i = 1; i < width - 1; i++)
         {           
-            float xUpR = imageFloat.r[o+1][i] - imageFloat.r[o][i]; // Here have to be added minus
-            float yUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i];
+            float xUpR = imageFloat.r[o+1][i] - imageFloat.r[o-1][i]; // Here have to be added minus
+            float yUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i-1];
             float downR = qSqrt(xUpR * xUpR + yUpR * yUpR);
             float resultXR = -(xUpR/downR);
             float resultYR = yUpR/downR;
 
-            float xUpG = imageFloat.g[o+1][i] - imageFloat.g[o][i]; // Here have to be added minus
-            float yUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i];
+            float xUpG = imageFloat.g[o+1][i] - imageFloat.g[o-1][i]; // Here have to be added minus
+            float yUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i-1];
             float downG = qSqrt(xUpG * xUpG + yUpG * yUpG);
             float resultXG = -(xUpG/downG);
             float resultYG = yUpG/downG;
 
-            float xUpB = imageFloat.b[o+1][i] - imageFloat.b[o][i]; // Here have to be added minus
-            float yUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
+            float xUpB = imageFloat.b[o+1][i] - imageFloat.b[o-1][i]; // Here have to be added minus
+            float yUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i-1];
             float downB = qSqrt(xUpB * xUpB + yUpB * yUpB);
             float resultXB = -(xUpB/downB);
             float resultYB = yUpB/downB;
@@ -333,7 +359,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLapla
     return result;
 }
 
-void BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageFloat, const List2DFloat &partialResult)
+void BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageFloat, const List2DFloat &partialResult, const QImage &mask)
 {
     const float DELTA_T = 0.1f;
 
@@ -344,17 +370,22 @@ void BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageF
     {
         for (int i = 0; i < width; i++)
         {
-            float valueR = imageFloat.r[o][i] + DELTA_T * partialResult.r[o][i];
-            float valueG = imageFloat.g[o][i] + DELTA_T * partialResult.g[o][i];
-            float valueB = imageFloat.b[o][i] + DELTA_T * partialResult.b[o][i];
+            if (qAlpha(mask.pixel(i, o)) == 255)
+            {
+                float valueR = imageFloat.r[o][i] + DELTA_T * partialResult.r[o][i];
+                float valueG = imageFloat.g[o][i] + DELTA_T * partialResult.g[o][i];
+                float valueB = imageFloat.b[o][i] + DELTA_T * partialResult.b[o][i];
 
-            valueR = qIsFinite(valueR) ? valueR : 0;
-            valueG = qIsFinite(valueG) ? valueG : 0;
-            valueB = qIsFinite(valueB) ? valueB : 0;
+                valueR = qIsFinite(valueR) ? valueR : 0;
+                valueG = qIsFinite(valueG) ? valueG : 0;
+                valueB = qIsFinite(valueB) ? valueB : 0;
 
-            imageFloat.r[o][i] = valueR;
-            imageFloat.g[o][i] = valueG;
-            imageFloat.b[o][i] = valueB;
+                //qDebug() << valueR << imageFloat.r[o][i] << DELTA_T * partialResult.r[o][i] << i << o;
+
+                imageFloat.r[o][i] = valueR;
+                imageFloat.g[o][i] = valueG;
+                imageFloat.b[o][i] = valueB;
+            }
         }
     }
 }
@@ -362,6 +393,8 @@ void BertalmioProcessing::updateImage_4(BertalmioProcessing::List2DFloat &imageF
 bool BertalmioProcessing::stabilityTest(const BertalmioProcessing::List2DFloat &partialResult)
 {
     bool result = true;
+
+    return false;
 
     int height = partialResult.r.count();
     int width = partialResult.r[0].count();
@@ -381,7 +414,7 @@ bool BertalmioProcessing::stabilityTest(const BertalmioProcessing::List2DFloat &
         }
     }
 
-    return result;
+    //return result;
 }
 
 BertalmioProcessing::List2DFloat BertalmioProcessing::imageToFloat(const QImage &image)
@@ -433,6 +466,7 @@ QImage BertalmioProcessing::floatToImage(const List2DFloat &imageFloat)
             valueB = qMax(valueB, 0);
 
             result.setPixel(i, o, qRgb(valueR, valueG, valueB));
+//            result.setPixel(i, o, qRgb(valueR, valueR, valueR));
         }
     }
 
