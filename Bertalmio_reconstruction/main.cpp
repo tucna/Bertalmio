@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
         int iteration = 0;
 
         BertalmioProcessing::List2DFloat gradientInput;
+        BertalmioProcessing::List2DFloat anisotropic;
         BertalmioProcessing::List2DFloat partialResult;
         BertalmioProcessing::GradientLaplace gradientLaplace;
         BertalmioProcessing::IsophoteDirection isophoteDirection;
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
         qDebug() << "Anisotropic diffusion...";
 
         // Whole image should goes thru anisotropic diffusion
-        bertalmioParts.anisotropicDiffusion_3(inputFloat);
+        anisotropic = bertalmioParts.anisotropicDiffusion_3(inputFloat);
 
         qDebug() << "----------ok----------";
 
@@ -57,14 +58,15 @@ int main(int argc, char *argv[])
                 //...few iterations of inpainting
                 qDebug() << i << ". inpainting iteration...";
 
-                laplace = bertalmioParts.laplace_7(inputFloat);
-                gradientLaplace = bertalmioParts.gradientLaplace_6(inputFloat);
-                isophoteDirection = bertalmioParts.isophoteDirection_8(inputFloat);
+                laplace = bertalmioParts.laplace_7(anisotropic);
+                gradientLaplace = bertalmioParts.gradientLaplace_6(anisotropic);
+                isophoteDirection = bertalmioParts.isophoteDirection_8(anisotropic);
                 beta = bertalmioParts.beta_9(gradientLaplace, isophoteDirection);
-                gradientInput = bertalmioParts.gradientInput_10(inputFloat, beta);
+                gradientInput = bertalmioParts.gradientInput_10(anisotropic, beta);
                 partialResult = bertalmioParts.partialResult_5(beta, gradientInput);
 
                 bertalmioParts.updateImage_4(inputFloat, partialResult, mask);
+                bertalmioParts.updateImage_4(anisotropic, partialResult, mask);
 
                 //qDebug() << "Gradient laplace: " << gradientLaplace.r[122][191].x << gradientLaplace.r[122][191].y;
                 //qDebug() << "Isophote: " << isophoteDirection.r[122][191].x << gradientLaplace.r[122][191].y;
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
                 // ...few iterations of anisotropic diffusion.
                 qDebug() << i << ". anisotropic filtering iteration...";
 
-                bertalmioParts.anisotropicDiffusion_3(inputFloat);
+                anisotropic = bertalmioParts.anisotropicDiffusion_3(anisotropic);
             }
 
             qDebug() << "----------ok----------";
@@ -99,7 +101,7 @@ int main(int argc, char *argv[])
             stable = bertalmioParts.stabilityTest(partialResult);
 
             QImage result;
-            result = bertalmioParts.floatToImage(inputFloat);
+            result = bertalmioParts.floatToImage(anisotropic);
             result.save("result_" + QString::number(iteration) + ".png");
             iteration++;
         }

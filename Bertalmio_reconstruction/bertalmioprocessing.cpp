@@ -247,8 +247,6 @@ BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(cons
 
 BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(const List2DFloat &imageFloat)
 {
-    // Right difference
-
     IsophoteDirection result;
     QList<ElementFloat> rowTemp;
 
@@ -274,27 +272,27 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
         rowG.append(ElementFloat(0,0));
         rowB.append(ElementFloat(0,0));
 
-        // central differencies
+        // central differencies are better (probably), but this one is used in another source code
 
         for (int i = 1; i < width - 1; i++)
         {           
-            float xUpR = imageFloat.r[o+1][i] - imageFloat.r[o-1][i]; // Here have to be added minus
-            float yUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i-1];
+            float xUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i]; // Here have to be added minus
+            float yUpR = imageFloat.r[o+1][i] - imageFloat.r[o][i];
             float downR = qSqrt(xUpR * xUpR + yUpR * yUpR);
-            float resultXR = -(xUpR/downR);
-            float resultYR = yUpR/downR;
+            float resultXR = -(yUpR/downR);
+            float resultYR = xUpR/downR;
 
-            float xUpG = imageFloat.g[o+1][i] - imageFloat.g[o-1][i]; // Here have to be added minus
-            float yUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i-1];
+            float xUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i]; // Here have to be added minus
+            float yUpG = imageFloat.g[o+1][i] - imageFloat.g[o][i];
             float downG = qSqrt(xUpG * xUpG + yUpG * yUpG);
-            float resultXG = -(xUpG/downG);
-            float resultYG = yUpG/downG;
+            float resultXG = -(yUpG/downG);
+            float resultYG = xUpG/downG;
 
-            float xUpB = imageFloat.b[o+1][i] - imageFloat.b[o-1][i]; // Here have to be added minus
-            float yUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i-1];
+            float xUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i]; // Here have to be added minus
+            float yUpB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
             float downB = qSqrt(xUpB * xUpB + yUpB * yUpB);
-            float resultXB = -(xUpB/downB);
-            float resultYB = yUpB/downB;
+            float resultXB = -(yUpB/downB);
+            float resultYB = xUpB/downB;
 
             resultXR = qIsFinite(resultXR) ? resultXR : 0;
             resultYR = qIsFinite(resultYR) ? resultYR : 0;
@@ -338,9 +336,9 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLapla
 
         for (int i = 0; i < gradient.r[0].count(); i++)
         {
-            float valueR = qRound(gradient.r[o][i].x * isophote.r[o][i].x + gradient.r[o][i].y * isophote.r[o][i].y);
-            float valueG = qRound(gradient.g[o][i].x * isophote.g[o][i].x + gradient.g[o][i].y * isophote.g[o][i].y);
-            float valueB = qRound(gradient.b[o][i].x * isophote.b[o][i].x + gradient.b[o][i].y * isophote.b[o][i].y);
+            float valueR = gradient.r[o][i].x * isophote.r[o][i].x + gradient.r[o][i].y * isophote.r[o][i].y;
+            float valueG = gradient.g[o][i].x * isophote.g[o][i].x + gradient.g[o][i].y * isophote.g[o][i].y;
+            float valueB = gradient.b[o][i].x * isophote.b[o][i].x + gradient.b[o][i].y * isophote.b[o][i].y;
 
             valueR = qIsFinite(valueR) ? valueR : 0;
             valueG = qIsFinite(valueG) ? valueG : 0;
@@ -520,7 +518,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             // >= - is it correct??
 
             // Red
-            if (beta.r[o][i] >= 0)
+            if (beta.r[o][i] > 0)
             {
                 xbR = qMin(0.0f, xbR);
                 xfR = qMax(0.0f, xfR);
@@ -540,7 +538,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             }
 
             // Green
-            if (beta.g[o][i] >= 0)
+            if (beta.g[o][i] > 0)
             {
                 xbG = qMin(0.0f, xbG);
                 xfG = qMax(0.0f, xfG);
@@ -560,7 +558,7 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             }
 
             // Blue
-            if (beta.b[o][i] >= 0)
+            if (beta.b[o][i] > 0)
             {
                 xbB = qMin(0.0f, xbB);
                 xfB = qMax(0.0f, xfB);
