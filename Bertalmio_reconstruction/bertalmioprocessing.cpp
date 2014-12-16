@@ -276,20 +276,20 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
 
         for (int i = 1; i < width - 1; i++)
         {           
-            float xUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i]; // Here have to be added minus
-            float yUpR = imageFloat.r[o+1][i] - imageFloat.r[o][i];
+            float xUpR = imageFloat.r[o][i+1] - imageFloat.r[o][i-1]; // Here have to be added minus
+            float yUpR = imageFloat.r[o+1][i] - imageFloat.r[o-1][i];
             float downR = qSqrt(xUpR * xUpR + yUpR * yUpR);
             float resultXR = -(yUpR/downR);
             float resultYR = xUpR/downR;
 
-            float xUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i]; // Here have to be added minus
-            float yUpG = imageFloat.g[o+1][i] - imageFloat.g[o][i];
+            float xUpG = imageFloat.g[o][i+1] - imageFloat.g[o][i-1]; // Here have to be added minus
+            float yUpG = imageFloat.g[o+1][i] - imageFloat.g[o-1][i];
             float downG = qSqrt(xUpG * xUpG + yUpG * yUpG);
             float resultXG = -(yUpG/downG);
             float resultYG = xUpG/downG;
 
-            float xUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i]; // Here have to be added minus
-            float yUpB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
+            float xUpB = imageFloat.b[o][i+1] - imageFloat.b[o][i-1]; // Here have to be added minus
+            float yUpB = imageFloat.b[o+1][i] - imageFloat.b[o-1][i];
             float downB = qSqrt(xUpB * xUpB + yUpB * yUpB);
             float resultXB = -(yUpB/downB);
             float resultYB = xUpB/downB;
