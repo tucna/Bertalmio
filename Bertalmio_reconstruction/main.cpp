@@ -75,14 +75,10 @@ int main(int argc, char *argv[])
                 //qDebug() << "partialResult: " << partialResult.r[10];
                 //qDebug() << "anisotropic: " << anisotropic.r[34];
 
-                //QImage result;
-                //result = bertalmioParts.floatToImage(inputFloat);
-                //result.save("result_" + QString::number(iteration) + ".png");
-                //result = bertalmioParts.floatToImage(laplace);
-                //result.save("laplace_" + QString::number(iteration) + ".png");
-                //result = bertalmioParts.floatToImage(beta);
-                //result.save("beta_" + QString::number(iteration) + ".png");
-                //iteration++;
+                QImage result;
+                result = bertalmioParts.floatToImage(inputFloat);
+                result.save("result_" + QString::number(iteration) + ".png");
+                iteration++;
             }
 
             qDebug() << "----------ok----------";
@@ -98,11 +94,6 @@ int main(int argc, char *argv[])
             qDebug() << "----------ok----------";
 
             stable = bertalmioParts.stabilityTest(partialResult);
-
-            QImage result;
-            result = bertalmioParts.floatToImage(inputFloat);
-            result.save("result_" + QString::number(iteration) + ".png");
-            iteration++;
         }
 
         qDebug() << "-==Ended==-";
