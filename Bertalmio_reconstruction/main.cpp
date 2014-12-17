@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
                 QImage result;
                 result = bertalmioParts.floatToImage(inputFloat);
                 result.save("result_" + QString::number(iteration) + ".png");
+
                 iteration++;
             }
 
