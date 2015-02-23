@@ -4,131 +4,99 @@
 
 #include "bertalmioprocessing.h"
 
-const int A = 15; // 15
-const int B = 2; // 2
-
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
     BertalmioProcessing bertalmioParts;
 
-    QImage input(QCoreApplication::applicationDirPath() + "/lena.png");
-    QImage mask(QCoreApplication::applicationDirPath() + "/mask.png");
-    QImage mask_full(QCoreApplication::applicationDirPath() + "/mask_full.png");
+    const int M = 21;
+    const int N = 17;
+    const int A = 15;  // steps of inpainting with equation (4)
+    const int B = 2;   // steps of diffusion with equation (3)
+    const int T = 50;  // repetition of loops A, B (A*B*T = 15*2*50 = 1500 ===> 2.6 secs)
+    const float dt = 0.5;
 
-    if (input.isNull() || mask.isNull() || mask_full.isNull())
-    {
-        qDebug() << "Image or mask not found!";
-    }
-    else
-    {
-        qDebug() << "-Process started!-";
-        qDebug() << "==================";
+    float I[N][M] = {
+        {0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3, 4, 5, 6, 7,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3, 4, 5, 6, 7,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3, 4, 5, 6,10,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3, 4, 5, 6,10,10, 9, 8, 7, 6, 5, 4,10, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3, 4, 5,10,10, 8, 9, 8, 7, 6, 5,10,10, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3,10,10, 6,10,10,10,10,10,10,10,10,10,10, 1, 0, 0},
+        {0, 0, 1, 2, 3,10,10, 6, 7, 8, 9, 8,10,10,10,10,10,10, 1, 0, 0},
+        {0, 0, 1, 2,10,10, 5, 6, 7, 8, 9, 8, 7, 6,10,10,10, 2, 1, 0, 0},
+        {0, 0,10,10, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5,10, 3, 2, 1, 0, 0},
+        {0, 0,10,10, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4,10, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4,10, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
+        {0, 0, 1, 2, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0}
+    };
 
-        qDebug() << "Initialization...";
+    float mask[N][M] = {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+        {0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0},
+        {0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    };
 
-        bool stable = false;
-        int iteration = 0;
+    float Inpainting[N][M];
+    float beta[N][M];
+    float mod_grad_mag[N][M];
 
-        BertalmioProcessing::List2DFloat gradientInput;
-        BertalmioProcessing::List2DFloat anisotropic;
-        BertalmioProcessing::List2DFloat partialResult;
-        BertalmioProcessing::GradientLaplace gradientLaplace;
-        BertalmioProcessing::IsophoteDirection isophoteDirection;
-        BertalmioProcessing::List2DFloat beta;
-        BertalmioProcessing::List2DFloat laplace;
-        BertalmioProcessing::List2DFloat inputFloat;
-
-        inputFloat = bertalmioParts.imageToFloat(input);
-
-        qDebug() << "----------ok----------";
-        qDebug() << "Anisotropic diffusion...";
-
-        // Whole image should goes thru anisotropic diffusion
-        //anisotropic = bertalmioParts.anisotropicDiffusion_3(inputFloat);
-
-        qDebug() << "----------ok----------";
-
-        // ...after that go to the loop
-        while (!stable)
+    // Normalization
+    for (int y = 0; y < N; y++)
+        for (int x = 0; x < M; x++)
         {
-            for(int i = 0; i < A; i++)
-            {
-                //...few iterations of inpainting
-                qDebug() << i << ". inpainting iteration...";
-
-                laplace = bertalmioParts.laplace_7(inputFloat);
-                gradientLaplace = bertalmioParts.gradientLaplace_6(laplace);
-                isophoteDirection = bertalmioParts.isophoteDirection_8(inputFloat);
-                beta = bertalmioParts.beta_9(gradientLaplace, isophoteDirection);
-                gradientInput = bertalmioParts.gradientInput_10(inputFloat, beta);
-                partialResult = bertalmioParts.partialResult_5(beta, gradientInput);
-
-                bertalmioParts.updateImage_4(inputFloat, partialResult, mask);
-
-                //qDebug() << "Gradient laplace: " << gradientLaplace.r[122][191].x << gradientLaplace.r[122][191].y;
-                //qDebug() << "Isophote: " << isophoteDirection.r[122][191].x << gradientLaplace.r[122][191].y;
-                //qDebug() << "Laplace: " << laplace.r[10];
-                //qDebug() << "Beta: " << beta.r[10];
-                //qDebug() << "gradientInput: " << gradientInput.r[10];
-                //qDebug() << "partialResult: " << partialResult.r[10];
-                //qDebug() << "anisotropic: " << anisotropic.r[34];
-
-                QImage result;
-                result = bertalmioParts.floatToImage(inputFloat);
-                result.save("result_" + QString::number(iteration) + ".png");
-
-                iteration++;
-            }
-
-            qDebug() << "----------ok----------";
-
-            for(int i = 0; i < B; i++)
-            {
-                // ...few iterations of anisotropic diffusion.
-                qDebug() << i << ". anisotropic filtering iteration...";
-
-                //anisotropic = bertalmioParts.anisotropicDiffusion_3(anisotropic);
-            }
-
-            qDebug() << "----------ok----------";
-
-            stable = bertalmioParts.stabilityTest(partialResult);
+            I[y][x] = I[y][x] / (float)10;
         }
 
-        qDebug() << "-==Ended==-";
+    // Copy I to Inpainting
+    for (int y = 0; y < N; y++)
+        for (int x = 0; x < M; x++)
+        {
+            Inpainting[y][x] = I[y][x];
+        }
+
+    // Recomputation
+    BertalmioProcessing::List2DFloat I_bert = bertalmioParts.array2DToFloat(I, N);
+    BertalmioProcessing::IsophoteDirection IxIy_bert;
+
+    for (int t = 0; t < T; t++)
+    {
+        // Inpainting
+        for (int a = 0; a < A; a++)
+        {
+            IxIy_bert = bertalmioParts.gradient(I_bert);
+
+            qDebug() << IxIy_bert.r[1][9].y;
+            qDebug() << IxIy_bert.g[1][9].y;
+            qDebug() << IxIy_bert.b[1][9].y;
+        }
+
+        // Diffusion
+        for (int b = 0; b < B; b++)
+        {
+
+        }
     }
-
-    /*
-    QImage result;
-
-    BertalmioProcessing::List2DFloat inputFloat;
-    BertalmioProcessing::List2DFloat anisotropic;
-
-    inputFloat = bertalmioParts.imageToFloat(input);
-    anisotropic = bertalmioParts.anisotropicDiffusion_3(inputFloat);
-    result = bertalmioParts.floatToImage(anisotropic);
-
-    result.save("testoOutput.png");    
-    */
-
-    /*
-    QImage result;
-    BertalmioProcessing::List2DFloat inputFloat;
-    BertalmioProcessing::List2DFloat laplace;
-
-    inputFloat = bertalmioParts.imageToFloat(input);
-    laplace = bertalmioParts.laplace_7(inputFloat);
-    result = bertalmioParts.floatToImage(laplace);
-
-    result.save("testLapla.png");
-    */
-
-    //qDebug() << gradientLaplace.r[9][10].x << gradientLaplace.r[9][10].y;
-    //qDebug() << isophoteDirection.r[4][4].x << isophoteDirection.r[4][4].y;
-    //qDebug() << isophoteDirection.g[4][4].x << isophoteDirection.g[4][4].y;
-    //qDebug() << isophoteDirection.b[4][4].x << isophoteDirection.b[4][4].y;
 
     return a.exec();
 }

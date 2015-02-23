@@ -347,6 +347,52 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
     return result;
 }
 
+BertalmioProcessing::IsophoteDirection BertalmioProcessing::gradient(const BertalmioProcessing::List2DFloat &imageFloat)
+{
+    IsophoteDirection result;
+    QList<ElementFloat> rowTemp;
+
+    int height = imageFloat.r.count();
+    int width = imageFloat.r[0].count();
+
+    for (int o = 0; o < height - 1; o++)
+    {
+        QList<ElementFloat> rowR;
+        QList<ElementFloat> rowG;
+        QList<ElementFloat> rowB;
+
+        for (int i = 0; i < width - 1; i++)
+        {
+            float xR = imageFloat.r[o][i+1] - imageFloat.r[o][i];
+            float yR = imageFloat.r[o+1][i] - imageFloat.r[o][i];
+
+            float xG = imageFloat.g[o][i+1] - imageFloat.g[o][i];
+            float yG = imageFloat.g[o+1][i] - imageFloat.g[o][i];
+
+            float xB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
+            float yB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
+
+            rowR.append(ElementFloat(xR, yR));
+            rowG.append(ElementFloat(xG, yG));
+            rowB.append(ElementFloat(xB, yB));
+        }
+
+        rowR.append(ElementFloat(0,0));
+        rowG.append(ElementFloat(0,0));
+        rowB.append(ElementFloat(0,0));
+
+        result.r.append(rowR);
+        result.g.append(rowG);
+        result.b.append(rowB);
+    }
+
+    result.r.append(rowTemp);
+    result.g.append(rowTemp);
+    result.b.append(rowTemp);
+
+    return result;
+}
+
 BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote)
 {
     List2DFloat result;
@@ -471,6 +517,31 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::imageToFloat(const QImage 
             rowR.append(qRed(image.pixel(i, o)));
             rowG.append(qGreen(image.pixel(i, o)));
             rowB.append(qBlue(image.pixel(i, o)));
+        }
+
+        result.r.append(rowR);
+        result.g.append(rowG);
+        result.b.append(rowB);
+    }
+
+    return result;
+}
+
+BertalmioProcessing::List2DFloat BertalmioProcessing::array2DToFloat(const float image[][21], int N)
+{
+    List2DFloat result;
+
+    for (int o = 0; o < N; o++)
+    {
+        QList<float> rowR;
+        QList<float> rowG;
+        QList<float> rowB;
+
+        for (int i = 0; i < 21; i++)
+        {
+            rowR.append(image[o][i]);
+            rowG.append(image[o][i]);
+            rowB.append(image[o][i]);
         }
 
         result.r.append(rowR);

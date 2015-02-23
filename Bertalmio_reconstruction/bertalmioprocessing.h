@@ -46,10 +46,12 @@ public:
     List2DFloat laplace_7(const List2DFloat &imageFloat);
     GradientLaplace gradientLaplace_6(const List2DFloat &laplace);
     IsophoteDirection isophoteDirection_8(const List2DFloat &imageFloat);
+    IsophoteDirection gradient(const List2DFloat &imageFloat);
     List2DFloat beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote);
 
     bool stabilityTest(const List2DFloat &partialResult);
     List2DFloat imageToFloat(const QImage &image);
+    List2DFloat array2DToFloat(const float image[][21], int N);
     QImage floatToImage(const List2DFloat &imageFloat);
 };
 
