@@ -12,10 +12,10 @@ int main(int argc, char *argv[])
 
     const int M = 21;
     const int N = 17;
-    const int A = 15;  // steps of inpainting with equation (4)
-    const int B = 2;   // steps of diffusion with equation (3)
-    const int T = 50;  // repetition of loops A, B (A*B*T = 15*2*50 = 1500 ===> 2.6 secs)
-    const float dt = 0.5;
+    const int A = 15;  // steps of inpainting with equation (4) - 15
+    const int B = 2;   // steps of diffusion with equation (3) - 2
+    const int T = 50;  // repetition of loops A, B (A*B*T = 15*2*50 = 1500 ===> 2.6 secs) - 50
+    const float dt = 0.5; // 0.5
 
     float I[N][M] = {
         {0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
@@ -96,19 +96,36 @@ int main(int argc, char *argv[])
         // Diffusion
         for (int b = 0; b < B; b++)
         {
-
+            bertalmioParts.anisotropicDiffusion_3(Inpainting_bert);
         }    
 
-
         // Write output
-        // mask is ok
-        qDebug() << "----------------------------";
-        for (int x = 0; x < M; x++)
-        {
-            qDebug() << IxIy_bert.r[10][x].x << IxIy_bert.r[10][x].y;
-        }
+        // mask is ok, IxIy is ok, laplacian and L-grad is ok, BETA has zeroes on the first elements,
+        //qDebug() << "----------------------------";
+        //for (int x = 0; x < M; x++)
+        //{
+        //    qDebug() << IxIy_bert.r[11][x].x << IxIy_bert.r[11][x].y;
+        //}
 
-        qDebug() << Inpainting_bert.r[10];
+        //qDebug () << "--------------";
+
+        //for (int x = 0; x < M; x++)
+        //{
+        //    qDebug() << LxLy_bert.r[11][x].x << LxLy_bert.r[11][x].y;
+        //}
+
+        //for (int x = 0; x < M; x++)
+        //{
+        //    qDebug() << mask_bert[11][x];
+        //}
+
+        //qDebug() << beta_bert.r[11];
+        //qDebug() << mod_grad_mag_bert.r[11];
+    }
+
+    for (int y = 0; y < N; y++)
+    {
+        qDebug() << Inpainting_bert.r[y];
     }
 
     return a.exec();
