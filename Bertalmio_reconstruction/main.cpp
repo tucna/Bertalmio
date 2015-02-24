@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
         {0, 0, 1, 2, 3,10, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0}
     };
 
-    float mask[N][M] = {
+    float mask_bert[N][M] = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -57,10 +57,6 @@ int main(int argc, char *argv[])
         {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
 
-    float Inpainting[N][M];
-    float beta[N][M];
-    float mod_grad_mag[N][M];
-
     // Normalization
     for (int y = 0; y < N; y++)
         for (int x = 0; x < M; x++)
@@ -68,34 +64,51 @@ int main(int argc, char *argv[])
             I[y][x] = I[y][x] / (float)10;
         }
 
-    // Copy I to Inpainting
-    for (int y = 0; y < N; y++)
-        for (int x = 0; x < M; x++)
-        {
-            Inpainting[y][x] = I[y][x];
-        }
-
     // Recomputation
-    BertalmioProcessing::List2DFloat I_bert = bertalmioParts.array2DToFloat(I, N);
-    BertalmioProcessing::IsophoteDirection IxIy_bert;
+    BertalmioProcessing::List2DFloat Inpainting_bert = bertalmioParts.array2DToFloat(I, N);
+    BertalmioProcessing::List2DFloat L_bert;
+    BertalmioProcessing::List2DFloat mod_grad_mag_bert;
+    BertalmioProcessing::List2DFloat It_bert;
+    BertalmioProcessing::List2DFloat beta_bert;
+    BertalmioProcessing::Gradient IxIy_bert;
+    BertalmioProcessing::Gradient LxLy_bert;
 
     for (int t = 0; t < T; t++)
     {
-        // Inpainting
-        for (int a = 0; a < A; a++)
-        {
-            IxIy_bert = bertalmioParts.gradient(I_bert);
+        qDebug() << "New iteration..." << t;
 
-            qDebug() << IxIy_bert.r[1][9].y;
-            qDebug() << IxIy_bert.g[1][9].y;
-            qDebug() << IxIy_bert.b[1][9].y;
+        // Inpainting
+        for (int aa = 0; aa < A; aa++)
+        {
+            IxIy_bert = bertalmioParts.gradient(Inpainting_bert);
+            L_bert = bertalmioParts.laplace_7(Inpainting_bert);
+            LxLy_bert = bertalmioParts.gradient(L_bert);
+
+            beta_bert = bertalmioParts.beta_9(LxLy_bert, IxIy_bert);
+            mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, mask_bert);
+            It_bert = bertalmioParts.partialResult_5(beta_bert, mod_grad_mag_bert);
+
+            bertalmioParts.updateImage_4(Inpainting_bert, It_bert, dt);
+
+            qDebug() << "Inpainting..." << aa;
         }
 
         // Diffusion
         for (int b = 0; b < B; b++)
         {
 
+        }    
+
+
+        // Write output
+        // mask is ok
+        qDebug() << "----------------------------";
+        for (int x = 0; x < M; x++)
+        {
+            qDebug() << IxIy_bert.r[10][x].x << IxIy_bert.r[10][x].y;
         }
+
+        qDebug() << Inpainting_bert.r[10];
     }
 
     return a.exec();

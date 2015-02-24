@@ -155,23 +155,6 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
             float valueG = imageFloat.g[o-1][i] + imageFloat.g[o][i-1] + imageFloat.g[o][i+1] + imageFloat.g[o+1][i] - 4 * imageFloat.g[o][i];
             float valueB = imageFloat.b[o-1][i] + imageFloat.b[o][i-1] + imageFloat.b[o][i+1] + imageFloat.b[o+1][i] - 4 * imageFloat.b[o][i];
 
-            valueR = qIsFinite(valueR) ? valueR : 0;
-            valueG = qIsFinite(valueG) ? valueG : 0;
-            valueB = qIsFinite(valueB) ? valueB : 0;
-
-            valueR = qMin(valueR, 255.0f);
-            valueG = qMin(valueG, 255.0f);
-            valueB = qMin(valueB, 255.0f);
-
-            valueR = qMax(valueR, 0.0f);
-            valueG = qMax(valueG, 0.0f);
-            valueB = qMax(valueB, 0.0f);
-
-            if (o == 92 && i == 69)
-            {
-                qDebug() << "laplace_7:"<< imageFloat.r[o-1][i] << imageFloat.r[o][i-1] << imageFloat.r[o][i+1] << imageFloat.r[o+1][i] << imageFloat.r[o][i] << valueR;
-            }
-
             rowR.append(valueR);
             rowG.append(valueG);
             rowB.append(valueB);
@@ -193,9 +176,9 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
     return result;
 }
 
-BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(const List2DFloat &laplace)
+BertalmioProcessing::Gradient BertalmioProcessing::gradientLaplace_6(const List2DFloat &laplace)
 {
-    GradientLaplace result;    
+    Gradient result;
     QList<ElementFloat> rowTemp;
 
     for (int i = 0; i < laplace.r[0].count(); i++)
@@ -263,9 +246,9 @@ BertalmioProcessing::GradientLaplace BertalmioProcessing::gradientLaplace_6(cons
     return result;
 }
 
-BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(const List2DFloat &imageFloat)
+BertalmioProcessing::Gradient BertalmioProcessing::isophoteDirection_8(const List2DFloat &imageFloat)
 {
-    IsophoteDirection result;
+    Gradient result;
     QList<ElementFloat> rowTemp;
 
     int height = imageFloat.r.count();
@@ -347,13 +330,18 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::isophoteDirection_8(
     return result;
 }
 
-BertalmioProcessing::IsophoteDirection BertalmioProcessing::gradient(const BertalmioProcessing::List2DFloat &imageFloat)
+BertalmioProcessing::Gradient BertalmioProcessing::gradient(const BertalmioProcessing::List2DFloat &imageFloat)
 {
-    IsophoteDirection result;
+    Gradient result;
     QList<ElementFloat> rowTemp;
 
     int height = imageFloat.r.count();
     int width = imageFloat.r[0].count();
+
+    for (int i = 0; i < width; i++)
+    {
+        rowTemp.append(ElementFloat(0,0));
+    }
 
     for (int o = 0; o < height - 1; o++)
     {
@@ -393,30 +381,24 @@ BertalmioProcessing::IsophoteDirection BertalmioProcessing::gradient(const Berta
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote)
+BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const Gradient &laplace, const Gradient &isophote)
 {
     List2DFloat result;
 
-    for (int o = 0; o < gradient.r.count(); o++)
+    for (int o = 0; o < laplace.r.count(); o++)
     {
         QList<float> rowR;
         QList<float> rowG;
         QList<float> rowB;
 
-        for (int i = 0; i < gradient.r[0].count(); i++)
+        for (int i = 0; i < laplace.r[0].count(); i++)
         {
-            float valueR = gradient.r[o][i].x * isophote.r[o][i].x + gradient.r[o][i].y * isophote.r[o][i].y;
-            float valueG = gradient.g[o][i].x * isophote.g[o][i].x + gradient.g[o][i].y * isophote.g[o][i].y;
-            float valueB = gradient.b[o][i].x * isophote.b[o][i].x + gradient.b[o][i].y * isophote.b[o][i].y;
-
-            valueR = qIsFinite(valueR) ? valueR : 0;
-            valueG = qIsFinite(valueG) ? valueG : 0;
-            valueB = qIsFinite(valueB) ? valueB : 0;
-
-            if (o == 92 && i == 69)
-            {
-                qDebug() << "beta_9:"<< gradient.r[o][i].x << isophote.r[o][i].x << gradient.r[o][i].y << isophote.r[o][i].y << valueR;
-            }
+            float valueR = (-laplace.r[o][i].x * isophote.r[o][i].y + laplace.r[o][i].y * isophote.r[o][i].x) /
+                           (qSqrt(isophote.r[o][i].x*isophote.r[o][i].x + isophote.r[o][i].y*isophote.r[o][i].y) + 0.001f);
+            float valueG = (-laplace.g[o][i].x * isophote.g[o][i].y + laplace.g[o][i].y * isophote.g[o][i].x) /
+                           (qSqrt(isophote.g[o][i].x*isophote.g[o][i].x + isophote.g[o][i].y*isophote.g[o][i].y) + 0.001f);
+            float valueB = (-laplace.b[o][i].x * isophote.b[o][i].y + laplace.b[o][i].y * isophote.b[o][i].x) /
+                           (qSqrt(isophote.b[o][i].x*isophote.b[o][i].x + isophote.b[o][i].y*isophote.b[o][i].y) + 0.001f);
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -431,10 +413,8 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::beta_9(const GradientLapla
     return result;
 }
 
-void BertalmioProcessing::updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult, const QImage &mask)
+void BertalmioProcessing::updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult, const float dt)
 {
-    const float DELTA_T = 0.1f;
-
     int height = imageFloat.r.count();
     int width = imageFloat.r[0].count();
 
@@ -442,33 +422,13 @@ void BertalmioProcessing::updateImage_4(List2DFloat &imageFloat, const List2DFlo
     {
         for (int i = 0; i < width; i++)
         {
-            if (qAlpha(mask.pixel(i, o)) == 255)
-            {
-                float valueR = imageFloat.r[o][i] + DELTA_T * partialResult.r[o][i];
-                float valueG = imageFloat.g[o][i] + DELTA_T * partialResult.g[o][i];
-                float valueB = imageFloat.b[o][i] + DELTA_T * partialResult.b[o][i];
+            float valueR = imageFloat.r[o][i] + dt * partialResult.r[o][i];
+            float valueG = imageFloat.g[o][i] + dt * partialResult.g[o][i];
+            float valueB = imageFloat.b[o][i] + dt * partialResult.b[o][i];
 
-                valueR = qIsFinite(valueR) ? valueR : 0;
-                valueG = qIsFinite(valueG) ? valueG : 0;
-                valueB = qIsFinite(valueB) ? valueB : 0;
-
-                if (o == 92 && i == 69)
-                {
-                    qDebug() << "updateImage_4:"<< imageFloat.r[o][i] << DELTA_T * partialResult.r[o][i] << valueR;
-                }
-
-                valueR = qMin(valueR, 255.0f);
-                valueG = qMin(valueG, 255.0f);
-                valueB = qMin(valueB, 255.0f);
-
-                valueR = qMax(valueR, 0.0f);
-                valueG = qMax(valueG, 0.0f);
-                valueB = qMax(valueB, 0.0f);
-
-                imageFloat.r[o][i] = valueR;
-                imageFloat.g[o][i] = valueG;
-                imageFloat.b[o][i] = valueB;
-            }
+            imageFloat.r[o][i] = valueR;
+            imageFloat.g[o][i] = valueG;
+            imageFloat.b[o][i] = valueB;
         }
     }
 }
@@ -587,7 +547,7 @@ QImage BertalmioProcessing::floatToImage(const List2DFloat &imageFloat)
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta)
+BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta, const float mask[][21])
 {
     List2DFloat result;
     QList<float> rowTemp;
@@ -631,7 +591,6 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             float ybB = imageFloat.b[o][i] - imageFloat.b[o-1][i];
             float yfB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
 
-            // >= - is it correct??
 
             // Red
             if (beta.r[o][i] > 0)
@@ -694,18 +653,9 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             }
 
             // Result
-            float valueR = qSqrt(xbR * xbR + xfR * xfR + ybR * ybR + yfR * yfR);
-            float valueG = qSqrt(xbG * xbG + xfG * xfG + ybG * ybG + yfG * yfG);
-            float valueB = qSqrt(xbB * xbB + xfB * xfB + ybB * ybB + yfB * yfB);
-
-            valueR = qIsFinite(valueR) ? valueR : 0;
-            valueG = qIsFinite(valueG) ? valueG : 0;
-            valueB = qIsFinite(valueB) ? valueB : 0;
-
-            if (o == 92 && i == 69)
-            {
-                qDebug() << "gradientInput_10:"<< xbR << xfR << ybR << yfR << valueR;
-            }
+            float valueR = qSqrt(mask[o][i] * (xbR * xbR + xfR * xfR + ybR * ybR + yfR * yfR));
+            float valueG = qSqrt(mask[o][i] * (xbG * xbG + xfG * xfG + ybG * ybG + yfG * yfG));
+            float valueB = qSqrt(mask[o][i] * (xbB * xbB + xfB * xfB + ybB * ybB + yfB * yfB));
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -743,15 +693,6 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::partialResult_5(const List
             float valueR = beta.r[o][i] * gradient.r[o][i];
             float valueG = beta.g[o][i] * gradient.g[o][i];
             float valueB = beta.b[o][i] * gradient.b[o][i];
-
-            valueR = qIsFinite(valueR) ? valueR : 0;
-            valueG = qIsFinite(valueG) ? valueG : 0;
-            valueB = qIsFinite(valueB) ? valueB : 0;
-
-            if (o == 92 && i == 69)
-            {
-                qDebug() << "partialResult_5:"<< beta.r[o][i] << gradient.r[o][i] << valueR;
-            }
 
             rowR.append(valueR);
             rowG.append(valueG);

@@ -15,14 +15,7 @@ public:
         ElementFloat(float x_h, float y_h) : x(x_h), y(y_h) {}
     };
 
-    struct GradientLaplace
-    {
-        QList< QList<ElementFloat> > r;
-        QList< QList<ElementFloat> > g;
-        QList< QList<ElementFloat> > b;
-    };
-
-    struct IsophoteDirection
+    struct Gradient
     {
         QList< QList<ElementFloat> > r;
         QList< QList<ElementFloat> > g;
@@ -38,16 +31,16 @@ public:
 
     BertalmioProcessing();
 
-    void updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult, const QImage &mask);
+    void updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult, const float dt);
 
     List2DFloat anisotropicDiffusion_3(List2DFloat &imageFloat);
-    List2DFloat gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta);
+    List2DFloat gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta, const float mask[][21]);
     List2DFloat partialResult_5(const List2DFloat &beta, const List2DFloat &gradient);
     List2DFloat laplace_7(const List2DFloat &imageFloat);
-    GradientLaplace gradientLaplace_6(const List2DFloat &laplace);
-    IsophoteDirection isophoteDirection_8(const List2DFloat &imageFloat);
-    IsophoteDirection gradient(const List2DFloat &imageFloat);
-    List2DFloat beta_9(const GradientLaplace &gradient, const IsophoteDirection &isophote);
+    Gradient gradientLaplace_6(const List2DFloat &laplace);
+    Gradient isophoteDirection_8(const List2DFloat &imageFloat);
+    Gradient gradient(const List2DFloat &imageFloat);
+    List2DFloat beta_9(const Gradient &laplace, const Gradient &isophote);
 
     bool stabilityTest(const List2DFloat &partialResult);
     List2DFloat imageToFloat(const QImage &image);
