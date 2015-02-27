@@ -84,48 +84,35 @@ int main(int argc, char *argv[])
             L_bert = bertalmioParts.laplace_7(Inpainting_bert);
             LxLy_bert = bertalmioParts.gradient(L_bert);
 
+            /*
+            QString debugS = "";
+
+            for (int y = 0; y < N; y++)
+            {
+                for (int x = 0; x < M; x++)
+                {
+                    debugS += QString::number(IxIy_bert.r[y][x].y) + "\t";
+                }
+
+                qDebug() << debugS;
+                debugS = "";
+            }
+            */
+
             beta_bert = bertalmioParts.beta_9(LxLy_bert, IxIy_bert);
             mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, mask_bert);
             It_bert = bertalmioParts.partialResult_5(beta_bert, mod_grad_mag_bert);
 
             bertalmioParts.updateImage_4(Inpainting_bert, It_bert, dt);
-
-            qDebug() << "Inpainting..." << aa;
         }
 
+        /*
         // Diffusion
         for (int b = 0; b < B; b++)
         {
             bertalmioParts.anisotropicDiffusion_3(Inpainting_bert);
-        }    
-
-        // Write output
-        // mask is ok, IxIy is ok, laplacian and L-grad is ok, BETA has zeroes on the first elements,
-        //qDebug() << "----------------------------";
-        //for (int x = 0; x < M; x++)
-        //{
-        //    qDebug() << IxIy_bert.r[11][x].x << IxIy_bert.r[11][x].y;
-        //}
-
-        //qDebug () << "--------------";
-
-        //for (int x = 0; x < M; x++)
-        //{
-        //    qDebug() << LxLy_bert.r[11][x].x << LxLy_bert.r[11][x].y;
-        //}
-
-        //for (int x = 0; x < M; x++)
-        //{
-        //    qDebug() << mask_bert[11][x];
-        //}
-
-        //qDebug() << beta_bert.r[11];
-        //qDebug() << mod_grad_mag_bert.r[11];
-    }
-
-    for (int y = 0; y < N; y++)
-    {
-        qDebug() << Inpainting_bert.r[y];
+        }
+        */
     }
 
     return a.exec();

@@ -343,22 +343,30 @@ BertalmioProcessing::Gradient BertalmioProcessing::gradient(const BertalmioProce
         rowTemp.append(ElementFloat(0,0));
     }
 
-    for (int o = 0; o < height - 1; o++)
+    result.r.append(rowTemp);
+    result.g.append(rowTemp);
+    result.b.append(rowTemp);
+
+    for (int o = 1; o < height - 1; o++)
     {
         QList<ElementFloat> rowR;
         QList<ElementFloat> rowG;
         QList<ElementFloat> rowB;
 
-        for (int i = 0; i < width - 1; i++)
+        rowR.append(ElementFloat(0,0));
+        rowG.append(ElementFloat(0,0));
+        rowB.append(ElementFloat(0,0));
+
+        for (int i = 1; i < width - 1; i++)
         {
-            float xR = imageFloat.r[o][i+1] - imageFloat.r[o][i];
-            float yR = imageFloat.r[o+1][i] - imageFloat.r[o][i];
+            float xR = (imageFloat.r[o][i+1] - imageFloat.r[o][i-1]) / 2.0f;
+            float yR = (imageFloat.r[o+1][i] - imageFloat.r[o-1][i]) / 2.0f;
 
-            float xG = imageFloat.g[o][i+1] - imageFloat.g[o][i];
-            float yG = imageFloat.g[o+1][i] - imageFloat.g[o][i];
+            float xG = (imageFloat.g[o][i+1] - imageFloat.g[o][i-1]) / 2.0f;
+            float yG = (imageFloat.g[o+1][i] - imageFloat.g[o-1][i]) / 2.0f;
 
-            float xB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
-            float yB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
+            float xB = (imageFloat.b[o][i+1] - imageFloat.b[o][i-1]) / 2.0f;
+            float yB = (imageFloat.b[o+1][i] - imageFloat.b[o-1][i]) / 2.0f;
 
             rowR.append(ElementFloat(xR, yR));
             rowG.append(ElementFloat(xG, yG));
@@ -377,6 +385,19 @@ BertalmioProcessing::Gradient BertalmioProcessing::gradient(const BertalmioProce
     result.r.append(rowTemp);
     result.g.append(rowTemp);
     result.b.append(rowTemp);
+
+    // fixes
+    for (int i = 1; i < width - 1; i++)
+    {
+        result.r[0][i].x = (imageFloat.r[0][i+1] - imageFloat.r[0][i-1]) / 2.0f;
+        result.r[height-1][i].x = (imageFloat.r[height-1][i+1] - imageFloat.r[height-1][i-1]) / 2.0f;
+    }
+
+    for (int o = 1; o < height - 1; o++)
+    {
+        result.r[o][0].x = (imageFloat.r[o+1][0] - imageFloat.r[o-1][0]) / 2.0f;
+        result.r[o][width-1].x = (imageFloat.r[o+1][width-1] - imageFloat.r[o-1][width-1]) / 2.0f;
+    }
 
     return result;
 }
@@ -552,12 +573,17 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
     List2DFloat result;
     QList<float> rowTemp;
 
+    QList<float> tempDifference;
+    tempDifference.clear();
+
+
     int height = imageFloat.r.count();
     int width = imageFloat.r[0].count();
 
     for (int i = 0; i < width; i++)
     {
         rowTemp.append(0);
+        tempDifference.append(0);
     }
 
     result.r.append(rowTemp);
@@ -566,6 +592,10 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
 
     for (int o = 1; o < height - 1; o++)
     {
+        qDebug() << tempDifference;
+
+        tempDifference.clear();
+
         QList<float> rowR;
         QList<float> rowG;
         QList<float> rowB;
@@ -590,6 +620,8 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             float xfB = imageFloat.b[o][i+1] - imageFloat.b[o][i];
             float ybB = imageFloat.b[o][i] - imageFloat.b[o-1][i];
             float yfB = imageFloat.b[o+1][i] - imageFloat.b[o][i];
+
+            tempDifference.append(xfR);
 
 
             // Red
