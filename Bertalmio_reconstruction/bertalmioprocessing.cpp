@@ -125,10 +125,14 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
     int width = imageFloat.r[0].count();
 
     /*
-     * 0  1  0
-     * 1 -4  1
-     * 0  1  0
-     */    
+        (4/(alpha+1))*[alpha/4,     (1-alpha)/4, alpha/4; ...
+                       (1-alpha)/4, -1,          (1-alpha)/4;  ...
+                       alpha/4,     (1-alpha)/4, alpha/4];
+
+         alpha = 0.2
+     */
+
+    const float alpha = 0.2f;
 
     for (int i = 0; i < width; i++)
     {
@@ -151,9 +155,14 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
 
         for (int i = 1; i < width - 1; i++)
         {
-            float valueR = imageFloat.r[o-1][i] + imageFloat.r[o][i-1] + imageFloat.r[o][i+1] + imageFloat.r[o+1][i] - 4 * imageFloat.r[o][i];
+            float valueR = alpha/4 * imageFloat.r[o-1][i-1] + (1-alpha)/4 * imageFloat.r[o-1][i] + imageFloat.r[o-1][i+1] * alpha/4 +
+                           (1-alpha)/4 * imageFloat.r[o][i-1] + (-1 * imageFloat.r[o][i]) + imageFloat.r[o][i+1] * (1-alpha)/4 +
+                           alpha/4 * imageFloat.r[o+1][i-1] + (1-alpha)/4 * imageFloat.r[o+1][i] + imageFloat.r[o+1][i+1] * alpha/4;
+
             float valueG = imageFloat.g[o-1][i] + imageFloat.g[o][i-1] + imageFloat.g[o][i+1] + imageFloat.g[o+1][i] - 4 * imageFloat.g[o][i];
             float valueB = imageFloat.b[o-1][i] + imageFloat.b[o][i-1] + imageFloat.b[o][i+1] + imageFloat.b[o+1][i] - 4 * imageFloat.b[o][i];
+
+            valueR = (4.0f/(alpha+1)) * valueR;
 
             rowR.append(valueR);
             rowG.append(valueG);
