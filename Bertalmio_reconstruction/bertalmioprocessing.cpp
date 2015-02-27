@@ -158,11 +158,16 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
             float valueR = alpha/4 * imageFloat.r[o-1][i-1] + (1-alpha)/4 * imageFloat.r[o-1][i] + imageFloat.r[o-1][i+1] * alpha/4 +
                            (1-alpha)/4 * imageFloat.r[o][i-1] + (-1 * imageFloat.r[o][i]) + imageFloat.r[o][i+1] * (1-alpha)/4 +
                            alpha/4 * imageFloat.r[o+1][i-1] + (1-alpha)/4 * imageFloat.r[o+1][i] + imageFloat.r[o+1][i+1] * alpha/4;
-
-            float valueG = imageFloat.g[o-1][i] + imageFloat.g[o][i-1] + imageFloat.g[o][i+1] + imageFloat.g[o+1][i] - 4 * imageFloat.g[o][i];
-            float valueB = imageFloat.b[o-1][i] + imageFloat.b[o][i-1] + imageFloat.b[o][i+1] + imageFloat.b[o+1][i] - 4 * imageFloat.b[o][i];
+            float valueG = alpha/4 * imageFloat.g[o-1][i-1] + (1-alpha)/4 * imageFloat.g[o-1][i] + imageFloat.g[o-1][i+1] * alpha/4 +
+                           (1-alpha)/4 * imageFloat.g[o][i-1] + (-1 * imageFloat.g[o][i]) + imageFloat.g[o][i+1] * (1-alpha)/4 +
+                           alpha/4 * imageFloat.g[o+1][i-1] + (1-alpha)/4 * imageFloat.g[o+1][i] + imageFloat.g[o+1][i+1] * alpha/4;
+            float valueB = alpha/4 * imageFloat.b[o-1][i-1] + (1-alpha)/4 * imageFloat.b[o-1][i] + imageFloat.b[o-1][i+1] * alpha/4 +
+                           (1-alpha)/4 * imageFloat.b[o][i-1] + (-1 * imageFloat.b[o][i]) + imageFloat.b[o][i+1] * (1-alpha)/4 +
+                           alpha/4 * imageFloat.b[o+1][i-1] + (1-alpha)/4 * imageFloat.b[o+1][i] + imageFloat.b[o+1][i+1] * alpha/4;
 
             valueR = (4.0f/(alpha+1)) * valueR;
+            valueG = (4.0f/(alpha+1)) * valueG;
+            valueB = (4.0f/(alpha+1)) * valueB;
 
             rowR.append(valueR);
             rowG.append(valueG);
@@ -181,6 +186,25 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::laplace_7(const List2DFloa
     result.r.append(rowTemp);
     result.g.append(rowTemp);
     result.b.append(rowTemp);
+
+    // fixes
+    for (int i = 1; i < width - 1; i++)
+    {
+        result.r[0][i] = ((1-alpha)/4 * imageFloat.r[0][i-1] + (-1 * imageFloat.r[0][i]) + imageFloat.r[0][i+1] * (1-alpha)/4 +
+                          alpha/4 * imageFloat.r[0+1][i-1] + (1-alpha)/4 * imageFloat.r[0+1][i] + imageFloat.r[0+1][i+1] * alpha/4)*(4.0f/(alpha+1));
+        result.r[height-1][i] = (alpha/4 * imageFloat.r[height-1-1][i-1] + (1-alpha)/4 * imageFloat.r[height-1-1][i] + imageFloat.r[height-1-1][i+1] * alpha/4 +
+                                 (1-alpha)/4 * imageFloat.r[height-1][i-1] + (-1 * imageFloat.r[height-1][i]) + imageFloat.r[height-1][i+1] * (1-alpha)/4)*(4.0f/(alpha+1));
+
+        result.g[0][i] = ((1-alpha)/4 * imageFloat.g[0][i-1] + (-1 * imageFloat.g[0][i]) + imageFloat.g[0][i+1] * (1-alpha)/4 +
+                          alpha/4 * imageFloat.g[0+1][i-1] + (1-alpha)/4 * imageFloat.g[0+1][i] + imageFloat.g[0+1][i+1] * alpha/4)*(4.0f/(alpha+1));
+        result.g[height-1][i] = (alpha/4 * imageFloat.g[height-1-1][i-1] + (1-alpha)/4 * imageFloat.g[height-1-1][i] + imageFloat.g[height-1-1][i+1] * alpha/4 +
+                                 (1-alpha)/4 * imageFloat.g[height-1][i-1] + (-1 * imageFloat.g[height-1][i]) + imageFloat.g[height-1][i+1] * (1-alpha)/4)*(4.0f/(alpha+1));
+
+        result.b[0][i] = ((1-alpha)/4 * imageFloat.b[0][i-1] + (-1 * imageFloat.b[0][i]) + imageFloat.b[0][i+1] * (1-alpha)/4 +
+                          alpha/4 * imageFloat.b[0+1][i-1] + (1-alpha)/4 * imageFloat.b[0+1][i] + imageFloat.b[0+1][i+1] * alpha/4)*(4.0f/(alpha+1));
+        result.b[height-1][i] = (alpha/4 * imageFloat.b[height-1-1][i-1] + (1-alpha)/4 * imageFloat.b[height-1-1][i] + imageFloat.b[height-1-1][i+1] * alpha/4 +
+                                 (1-alpha)/4 * imageFloat.b[height-1][i-1] + (-1 * imageFloat.b[height-1][i]) + imageFloat.b[height-1][i+1] * (1-alpha)/4)*(4.0f/(alpha+1));
+    }
 
     return result;
 }
@@ -400,12 +424,24 @@ BertalmioProcessing::Gradient BertalmioProcessing::gradient(const BertalmioProce
     {
         result.r[0][i].x = (imageFloat.r[0][i+1] - imageFloat.r[0][i-1]) / 2.0f;
         result.r[height-1][i].x = (imageFloat.r[height-1][i+1] - imageFloat.r[height-1][i-1]) / 2.0f;
+
+        result.g[0][i].x = (imageFloat.g[0][i+1] - imageFloat.g[0][i-1]) / 2.0f;
+        result.g[height-1][i].x = (imageFloat.g[height-1][i+1] - imageFloat.g[height-1][i-1]) / 2.0f;
+
+        result.b[0][i].x = (imageFloat.b[0][i+1] - imageFloat.b[0][i-1]) / 2.0f;
+        result.b[height-1][i].x = (imageFloat.b[height-1][i+1] - imageFloat.b[height-1][i-1]) / 2.0f;
     }
 
     for (int o = 1; o < height - 1; o++)
     {
         result.r[o][0].x = (imageFloat.r[o+1][0] - imageFloat.r[o-1][0]) / 2.0f;
         result.r[o][width-1].x = (imageFloat.r[o+1][width-1] - imageFloat.r[o-1][width-1]) / 2.0f;
+
+        result.g[o][0].x = (imageFloat.g[o+1][0] - imageFloat.g[o-1][0]) / 2.0f;
+        result.g[o][width-1].x = (imageFloat.g[o+1][width-1] - imageFloat.g[o-1][width-1]) / 2.0f;
+
+        result.b[o][0].x = (imageFloat.b[o+1][0] - imageFloat.b[o-1][0]) / 2.0f;
+        result.b[o][width-1].x = (imageFloat.b[o+1][width-1] - imageFloat.b[o-1][width-1]) / 2.0f;
     }
 
     return result;
