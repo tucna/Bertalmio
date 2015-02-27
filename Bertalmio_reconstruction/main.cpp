@@ -84,24 +84,25 @@ int main(int argc, char *argv[])
             L_bert = bertalmioParts.laplace_7(Inpainting_bert);
             LxLy_bert = bertalmioParts.gradient(L_bert);
 
+            beta_bert = bertalmioParts.beta_9(LxLy_bert, IxIy_bert);
+            mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, mask_bert);
+            It_bert = bertalmioParts.partialResult_5(beta_bert, mod_grad_mag_bert);
 
+            /*
             QString debugS = "";
 
             for (int y = 0; y < N; y++)
             {
                 for (int x = 0; x < M; x++)
                 {
-                    debugS += QString::number(L_bert.r[y][x]) + "\t";
+                    debugS += QString::number(beta_bert.r[y][x]) + "\t";
                 }
 
                 qDebug() << debugS;
                 debugS = "";
             }
+            */
 
-
-            beta_bert = bertalmioParts.beta_9(LxLy_bert, IxIy_bert);
-            mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, mask_bert);
-            It_bert = bertalmioParts.partialResult_5(beta_bert, mod_grad_mag_bert);
 
             bertalmioParts.updateImage_4(Inpainting_bert, It_bert, dt);
         }
@@ -113,6 +114,11 @@ int main(int argc, char *argv[])
             bertalmioParts.anisotropicDiffusion_3(Inpainting_bert);
         }
         */
+    }
+
+    for (int y = 0; y < N; y++)
+    {
+        qDebug() << Inpainting_bert.r[y];
     }
 
     return a.exec();
