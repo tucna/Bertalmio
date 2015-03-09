@@ -44,7 +44,6 @@ public:
 
     bool stabilityTest(const List2DFloat &partialResult);
     List2DFloat imageToFloat(const QImage &image);
-    List2DFloat maskToFloat(const QImage &mask);
     List2DFloat array2DToFloat(const float image[][21], int N);
     QImage floatToImage(const List2DFloat &imageFloat);
 };

@@ -553,31 +553,6 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::imageToFloat(const QImage 
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::maskToFloat(const QImage &mask)
-{
-    List2DFloat result;
-
-    for (int o = 0; o < mask.height(); o++)
-    {
-        QList<float> rowR;
-        QList<float> rowG;
-        QList<float> rowB;
-
-        for (int i = 0; i < mask.width(); i++)
-        {
-            rowR.append(qRed(mask.pixel(i, o))/255);
-            rowG.append(qGreen(mask.pixel(i, o))/255);
-            rowB.append(qBlue(mask.pixel(i, o))/255);
-        }
-
-        result.r.append(rowR);
-        result.g.append(rowG);
-        result.b.append(rowB);
-    }
-
-    return result;
-}
-
 BertalmioProcessing::List2DFloat BertalmioProcessing::array2DToFloat(const float image[][21], int N)
 {
     List2DFloat result;
@@ -590,9 +565,9 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::array2DToFloat(const float
 
         for (int i = 0; i < 21; i++)
         {
-            rowR.append(image[o][i]);
-            rowG.append(image[o][i]);
-            rowB.append(image[o][i]);
+            rowR.append(image[o][i] / 255.0f);
+            rowG.append(image[o][i] / 255.0f);
+            rowB.append(image[o][i] / 255.0f);
         }
 
         result.r.append(rowR);
@@ -614,14 +589,9 @@ QImage BertalmioProcessing::floatToImage(const List2DFloat &imageFloat)
     {
         for (int i = 0; i < width; i++)
         {
-            int valueR = qRound(imageFloat.r[o][i]*255);
-            int valueG = qRound(imageFloat.g[o][i]*255);
-            int valueB = qRound(imageFloat.b[o][i]*255);
-
-            if (o == 92 && i == 69)
-            {
-                qDebug() << "floatToImage:"<< valueR;
-            }
+            int valueR = qRound(imageFloat.r[o][i] * 255.0f);
+            int valueG = qRound(imageFloat.g[o][i] * 255.0f);
+            int valueB = qRound(imageFloat.b[o][i] * 255.0f);
 
             valueR = qMin(valueR, 255);
             valueG = qMin(valueG, 255);
