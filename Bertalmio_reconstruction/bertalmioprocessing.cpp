@@ -540,9 +540,34 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::imageToFloat(const QImage 
 
         for (int i = 0; i < image.width(); i++)
         {
-            rowR.append(qRed(image.pixel(i, o)));
-            rowG.append(qGreen(image.pixel(i, o)));
-            rowB.append(qBlue(image.pixel(i, o)));
+            rowR.append(qRed(image.pixel(i, o))/255.0f);
+            rowG.append(qGreen(image.pixel(i, o))/255.0f);
+            rowB.append(qBlue(image.pixel(i, o))/255.0f);
+        }
+
+        result.r.append(rowR);
+        result.g.append(rowG);
+        result.b.append(rowB);
+    }
+
+    return result;
+}
+
+BertalmioProcessing::List2DFloat BertalmioProcessing::maskToFloat(const QImage &mask)
+{
+    List2DFloat result;
+
+    for (int o = 0; o < mask.height(); o++)
+    {
+        QList<float> rowR;
+        QList<float> rowG;
+        QList<float> rowB;
+
+        for (int i = 0; i < mask.width(); i++)
+        {
+            rowR.append(qRed(mask.pixel(i, o))/255);
+            rowG.append(qGreen(mask.pixel(i, o))/255);
+            rowB.append(qBlue(mask.pixel(i, o))/255);
         }
 
         result.r.append(rowR);
@@ -589,9 +614,9 @@ QImage BertalmioProcessing::floatToImage(const List2DFloat &imageFloat)
     {
         for (int i = 0; i < width; i++)
         {
-            int valueR = qRound(imageFloat.r[o][i]);
-            int valueG = qRound(imageFloat.g[o][i]);
-            int valueB = qRound(imageFloat.b[o][i]);
+            int valueR = qRound(imageFloat.r[o][i]*255);
+            int valueG = qRound(imageFloat.g[o][i]*255);
+            int valueB = qRound(imageFloat.b[o][i]*255);
 
             if (o == 92 && i == 69)
             {
@@ -613,7 +638,7 @@ QImage BertalmioProcessing::floatToImage(const List2DFloat &imageFloat)
     return result;
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta, const float mask[][21])
+BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta, const List2DFloat &mask)
 {
     List2DFloat result;
     QList<float> rowTemp;
@@ -730,9 +755,9 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::gradientInput_10(const Lis
             }
 
             // Result
-            float valueR = qSqrt(mask[o][i] * (xbR * xbR + xfR * xfR + ybR * ybR + yfR * yfR));
-            float valueG = qSqrt(mask[o][i] * (xbG * xbG + xfG * xfG + ybG * ybG + yfG * yfG));
-            float valueB = qSqrt(mask[o][i] * (xbB * xbB + xfB * xfB + ybB * ybB + yfB * yfB));
+            float valueR = qSqrt(mask.r[o][i] * (xbR * xbR + xfR * xfR + ybR * ybR + yfR * yfR));
+            float valueG = qSqrt(mask.r[o][i] * (xbG * xbG + xfG * xfG + ybG * ybG + yfG * yfG));
+            float valueB = qSqrt(mask.r[o][i] * (xbB * xbB + xfB * xfB + ybB * ybB + yfB * yfB));
 
             rowR.append(valueR);
             rowG.append(valueG);

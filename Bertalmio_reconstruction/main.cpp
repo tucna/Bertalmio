@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     const int T = 50;  // repetition of loops A, B (A*B*T = 15*2*50 = 1500 ===> 2.6 secs) - 50
     const float dt = 0.5; // 0.5
 
+    /*
     float I[N][M] = {
         {0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
         {0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0},
@@ -63,9 +64,14 @@ int main(int argc, char *argv[])
         {
             I[y][x] = I[y][x] / (float)10;
         }
+    */
+
+    QImage I_bert("I_bert.png");
+    QImage M_bert("mask_bert.png");
 
     // Recomputation
-    BertalmioProcessing::List2DFloat Inpainting_bert = bertalmioParts.array2DToFloat(I, N);
+    BertalmioProcessing::List2DFloat Inpainting_bert = bertalmioParts.imageToFloat(I_bert);
+    BertalmioProcessing::List2DFloat Mask_bert = bertalmioParts.maskToFloat(M_bert);
     BertalmioProcessing::List2DFloat L_bert;
     BertalmioProcessing::List2DFloat mod_grad_mag_bert;
     BertalmioProcessing::List2DFloat It_bert;
@@ -85,7 +91,7 @@ int main(int argc, char *argv[])
             LxLy_bert = bertalmioParts.gradient(L_bert);
 
             beta_bert = bertalmioParts.beta_9(LxLy_bert, IxIy_bert);
-            mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, mask_bert);
+            mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, Mask_bert);
             It_bert = bertalmioParts.partialResult_5(beta_bert, mod_grad_mag_bert);
 
             /*
@@ -107,6 +113,10 @@ int main(int argc, char *argv[])
             bertalmioParts.updateImage_4(Inpainting_bert, It_bert, dt);
         }
 
+        QImage result = bertalmioParts.floatToImage(Inpainting_bert);
+        result.save("output"+ QString::number(t) +".png");
+
+
         /*
         // Diffusion
         for (int b = 0; b < B; b++)
@@ -116,10 +126,12 @@ int main(int argc, char *argv[])
         */
     }
 
+    /*
     for (int y = 0; y < N; y++)
     {
         qDebug() << Inpainting_bert.r[y];
     }
+    */
 
     return a.exec();
 }
