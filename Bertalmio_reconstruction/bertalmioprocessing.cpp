@@ -10,7 +10,7 @@ BertalmioProcessing::BertalmioProcessing()
 {
 }
 
-BertalmioProcessing::List2DFloat BertalmioProcessing::anisotropicDiffusion_3(List2DFloat &imageFloat)
+BertalmioProcessing::List2DFloat BertalmioProcessing::anisotropicDiffusion_3(List2DFloat &imageFloat, const List2DFloat &mask)
 {
     const float KAPPA = 30.0f;
     const float DELTA_T = 1.0f/7.0f;
@@ -106,9 +106,18 @@ BertalmioProcessing::List2DFloat BertalmioProcessing::anisotropicDiffusion_3(Lis
                 valueG = qIsFinite(valueG) ? valueG : 0;
                 valueB = qIsFinite(valueB) ? valueB : 0;
 
-                result.r[o][i] = valueR;
-                result.g[o][i] = valueG;
-                result.b[o][i] = valueB;
+                if (mask.r[o][i] == 0)
+                {
+                    result.r[o][i] = imageFloat.r[o][i];
+                    result.g[o][i] = imageFloat.g[o][i];
+                    result.b[o][i] = imageFloat.b[o][i];
+                }
+                else
+                {
+                    result.r[o][i] = valueR;
+                    result.g[o][i] = valueG;
+                    result.b[o][i] = valueB;
+                }
             }
         }
     }

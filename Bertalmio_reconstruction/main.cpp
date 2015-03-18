@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
     const int N = 17;
     const int A = 15;  // steps of inpainting with equation (4) - 15
     const int B = 2;   // steps of diffusion with equation (3) - 2
-    const int T = 1000;  // repetition of loops A, B (A*B*T = 15*2*50 = 1500 ===> 2.6 secs) - 50
-    const float dt = 0.5; // 0.5
+    const int T = 100;  // repetition of loops A, B (A*B*T = 15*2*50 = 1500 ===> 2.6 secs) - 50
+    const float dt = 0.1; // 0.5
 
     /*
     float I[N][M] = {
@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
     QImage M_bert("mask_bert.png");
 
     // Recomputation
+
     BertalmioProcessing::List2DFloat Inpainting_bert = bertalmioParts.imageToFloat(I_bert);
     BertalmioProcessing::List2DFloat Mask_bert = bertalmioParts.imageToFloat(M_bert);
 
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
             mod_grad_mag_bert = bertalmioParts.gradientInput_10(Inpainting_bert, beta_bert, Mask_bert);
             It_bert = bertalmioParts.partialResult_5(beta_bert, mod_grad_mag_bert);
 
+
             /*
             QString debugS = "";
 
@@ -107,7 +109,7 @@ int main(int argc, char *argv[])
             {
                 for (int x = 0; x < M; x++)
                 {
-                    debugS += QString::number(beta_bert.r[y][x]) + "\t";
+                    debugS += QString::number(Mask_bert.r[y][x]) + "\t";
                 }
 
                 qDebug() << debugS;
@@ -115,19 +117,19 @@ int main(int argc, char *argv[])
             }
             */
 
+
             bertalmioParts.updateImage_4(Inpainting_bert, It_bert, dt);
         }
 
-        /*
+
         // Diffusion
         for (int b = 0; b < B; b++)
         {
-            bertalmioParts.anisotropicDiffusion_3(Inpainting_bert);
+            Inpainting_bert = bertalmioParts.anisotropicDiffusion_3(Inpainting_bert, Mask_bert);
         }
-        */
 
         QImage result = bertalmioParts.floatToImage(Inpainting_bert);
-        result.save("output"+ QString::number(t) +".png");
+        result.save("output_" + QString::number(t) + ".png");
     }
 
     /*
@@ -135,6 +137,11 @@ int main(int argc, char *argv[])
     {
         qDebug() << Inpainting_bert.r[y];
     }
+    */
+
+    /*
+    QImage result = bertalmioParts.floatToImage(Inpainting_bert);
+    result.save("output.png");
     */
 
     return a.exec();

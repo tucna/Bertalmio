@@ -33,7 +33,7 @@ public:
 
     void updateImage_4(List2DFloat &imageFloat, const List2DFloat &partialResult, const float dt);
 
-    List2DFloat anisotropicDiffusion_3(List2DFloat &imageFloat);
+    List2DFloat anisotropicDiffusion_3(List2DFloat &imageFloat, const List2DFloat &mask);
     List2DFloat gradientInput_10(const List2DFloat &imageFloat, const List2DFloat &beta, const List2DFloat &mask);
     List2DFloat partialResult_5(const List2DFloat &beta, const List2DFloat &gradient);
     List2DFloat laplace_7(const List2DFloat &imageFloat);
